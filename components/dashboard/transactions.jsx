@@ -34,7 +34,6 @@ export default function Transactions(props) {
     setTransactions(sortedTransaction);
   }, [income, purchases]);
 
-  console.log(transactions);
   return (
     <>
       <tbody>
@@ -46,17 +45,17 @@ export default function Transactions(props) {
             </td>
             <td className="py-4 px-6">
               {transaction.type === "purchase" ? (
-                <span className="bg-bittersweet text-bittersweet bg-opacity-10 rounded-full px-3 py-1 text-xs font-medium">
+                <span className="bg-ghost-white text-bittersweet bg-opacity-10 rounded-full px-3 py-1 text-xs font-medium">
                   Purchase
                 </span>
               ) : (
-                <span className="bg-green-100 bg-opacity-10 text-green-600 rounded-full px-3 py-1 text-xs font-medium">
+                <span className="bg-ghost-white bg-opacity-10 text-green-500 rounded-full px-3 py-1 text-xs font-medium">
                   Income
                 </span>
               )}
             </td>
             <td
-              className={`py-4 px-6 font-medium ${transaction.type === "purchase" ? "text-bittersweet" : "text-green-600"}`}
+              className={`py-4 px-6 font-medium ${transaction.type === "purchase" ? "text-bittersweet" : "text-green-500"}`}
             >
               {transaction.type === "purchase" ? "-" : "+"}$
               {transaction.amount.toFixed(2)}

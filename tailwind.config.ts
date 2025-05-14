@@ -19,6 +19,11 @@ const config = {
     },
     extend: {
       colors: {
+        'paynes-gray': '#495867',
+        'glaucous': '#577399',
+        'columbia-blue': '#BDD5EA',
+        'ghost-white': '#F7F7FF',
+        'bittersweet': '#FE5F55',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

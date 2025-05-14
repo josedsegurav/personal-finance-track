@@ -1,6 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-
-// import Transactions from "../../components/dashboard/transactions";
+import Transactions from "../../components/dashboard/transactions";
 // import * as getData from "../../utils/getdata";
 // import Sidebar from "../../components/sidebar";
 
@@ -78,10 +77,10 @@ export default async function Page() {
               Total Income
             </h3>
             <p className="text-2xl font-semibold text-paynes-gray">
-              ${totalNetIncome}
+              ${totalNetIncome.toFixed(2)}
             </p>
             <p className="text-sm text-green-500 flex items-center mt-2">
-              <span>{incomeDifference}% from last month</span>
+              <span>{incomeDifference.toFixed()}% from last month</span>
             </p>
           </div>
 
@@ -90,10 +89,10 @@ export default async function Page() {
               Total Purchases
             </h3>
             <p className="text-2xl font-semibold text-paynes-gray">
-              ${totalAmountPurchases}
+              ${totalAmountPurchases.toFixed(2)}
             </p>
             <p className="text-sm text-bittersweet flex items-center mt-2">
-              <span>{purchaseDifference}% from last month</span>
+              <span>{purchaseDifference.toFixed()}% from last month</span>
             </p>
           </div>
 
@@ -102,7 +101,7 @@ export default async function Page() {
               Net Balance
             </h3>
             <p className="text-2xl font-semibold text-paynes-gray">
-              ${balance}
+              ${balance.toFixed(2)}
             </p>
           </div>
         </div>
@@ -140,7 +139,7 @@ export default async function Page() {
                 </th>
               </tr>
             </thead>
-            {/* <Transactions income={income} purchases={purchases} /> */}
+            <Transactions income={income} purchases={purchases} />
           </table>
         </div>
       </div>
