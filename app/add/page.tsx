@@ -565,7 +565,7 @@ export default function Page() {
                   <input
                     type="date"
                     id="date_of_purchase"
-                    name="date_of_purchase"
+                    name="date"
                     value={formData.date}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
