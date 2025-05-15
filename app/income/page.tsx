@@ -1,7 +1,8 @@
 
 import { createClient } from '@/utils/supabase/server'
 import FiltersAndMovements from "../../components/income/filtermovements"
-import Sidebar from "@/components/sidebar";
+import SidebarNav from '@/components/sidebar';
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export default async function Purchases() {
   const supabase = await createClient()
@@ -47,7 +48,8 @@ export default async function Purchases() {
     <>
       <div className="flex min-h-screen bg-ghost-white">
         {/* Sidebar would be here in a full layout */}
-        <Sidebar activeMenu="income"/>
+        <SidebarNav activeMenu="income"/>
+        <SidebarTrigger/>
 
         {/* Main Content */}
         <div className="flex-1 p-8">

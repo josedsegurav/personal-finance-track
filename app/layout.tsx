@@ -5,6 +5,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import Link from "next/link";
 import "./globals.css";
 
@@ -14,8 +15,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "Personal Finance track",
+  description: "Easy way to organize and manage your finances",
 };
 
 const geistSans = Geist({
@@ -37,7 +38,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main>
+          <SidebarProvider>
+          <main className="mx-auto">
             <div>
               <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
                 <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
@@ -70,6 +72,7 @@ export default function RootLayout({
               </footer>
             </div>
           </main>
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>
