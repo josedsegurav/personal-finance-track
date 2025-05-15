@@ -13,11 +13,11 @@ import {
   X,
 } from "lucide-react";
 
-export default function Sidebar() {
-  // const { activeMenu } = props;
+export default function Sidebar(props) {
+  const { activeMenu } = props;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState();
+  const [activeLink, setActiveLink] = useState(activeMenu);
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -102,7 +102,7 @@ export default function Sidebar() {
               </Link>
             </li>
             <li>
-              <Link
+              {/* <Link
                 href="/expenses"
                 className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
                 style={
@@ -126,7 +126,7 @@ export default function Sidebar() {
                 ) : (
                   ""
                 )}
-              </Link>
+              </Link> */}
             </li>
             <li>
               <Link

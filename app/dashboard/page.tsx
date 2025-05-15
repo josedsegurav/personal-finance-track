@@ -1,7 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import Transactions from "../../components/dashboard/transactions";
-// import * as getData from "../../utils/getdata";
-import Sidebar from "../../components/sidebar";
+import Sidebar from "@/components/sidebar";
 
 export default async function Page() {
   const supabase = await createClient()
@@ -62,8 +61,8 @@ export default async function Page() {
     // <pre>{JSON.stringify(income, null, 2)}</pre>
     <div className="flex min-h-screen bg-ghost-white">
       {/* Sidebar */}
-    {/* <Sidebar activeMenu="dashboard"/> */}
-    <Sidebar/>
+    <Sidebar activeMenu="dashboard"/>
+
 
       {/* Main Content */}
       <div className="flex-1 p-8">
