@@ -43,9 +43,9 @@ export default function RootLayout({
             <div>
               <nav className="w-full flex justify-between border-b border-b-foreground/10 h-16">
                 <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                  <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Next.js Supabase Starter</Link>
-                  </div>
+                <h1 className="text-2xl font-bold text-glaucous">
+            <span className="text-bittersweet">Finance</span> Tracker
+          </h1>
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
                 </div>
               </nav>
