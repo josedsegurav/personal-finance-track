@@ -8,7 +8,7 @@ export default async function Page() {
   const supabase = await createClient()
 
   const { data: income } = await supabase.from("income").select(`*`);
-  const { data: purchases } = await supabase.from("purchases").select(`*`);
+  const { data: expenses } = await supabase.from("expenses").select(`*`);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
@@ -25,12 +25,12 @@ export default async function Page() {
       : 0;
   }
 
-  function totalMonthlyPurchases(month: any) {
-    return purchases
-    ? purchases.reduce(
-        (sum: any, purchase: any) =>
-          new Date(purchase.purchase_date).getMonth() === month
-            ? sum + parseFloat(purchase.amount)
+  function totalMonthlyExpenses(month: any) {
+    return expenses
+    ? expenses.reduce(
+        (sum: any, expense: any) =>
+          new Date(expense.expense_date).getMonth() === month
+            ? sum + parseFloat(expense.total_expense)
             : sum,
         0
       )
@@ -41,21 +41,11 @@ export default async function Page() {
 
   const incomeDifference = (totalNetIncome / totalMonthlyNetIncome(currentMonth - 1) * 100);
 
-  const totalPurchases = totalMonthlyPurchases(currentMonth);
+  const totalExpenses = totalMonthlyExpenses(currentMonth);
 
-  const purchaseDifference = (totalPurchases / totalMonthlyPurchases(currentMonth - 1) * 100);
+  const expenseDifference = (totalExpenses / totalMonthlyExpenses(currentMonth - 1) * 100);
 
-  const totalPurchasesTaxes = purchases
-    ? purchases.reduce(
-        (sum: any, purchase: any) =>
-          sum + parseFloat(purchase.amount) * parseInt(purchase.taxes),
-        0
-      )
-    : 0;
-
-  const totalAmountPurchases = totalPurchases + totalPurchasesTaxes;
-
-  const balance = totalNetIncome - totalAmountPurchases;
+  const balance = totalNetIncome - totalExpenses;
 
 
 
@@ -89,13 +79,13 @@ export default async function Page() {
 
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
-              Total Purchases
+              Total expenses
             </h3>
             <p className="text-2xl font-semibold text-paynes-gray">
-              ${totalAmountPurchases.toFixed(2)}
+              ${totalExpenses.toFixed(2)}
             </p>
             <p className="text-sm text-bittersweet flex items-center mt-2">
-              <span>{purchaseDifference.toFixed()}% from last month</span>
+              <span>{expenseDifference.toFixed()}% from last month</span>
             </p>
           </div>
 
@@ -142,7 +132,7 @@ export default async function Page() {
                 </th>
               </tr>
             </thead>
-            <Transactions income={income} purchases={purchases} />
+            <Transactions income={income} expenses={expenses} />
           </table>
         </div>
       </div>

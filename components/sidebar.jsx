@@ -125,7 +125,7 @@ export default function SidebarNav(props) {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {/* <SidebarMenuItem>
+                <SidebarMenuItem>
                 <SidebarMenuButton>
                   <Link
                 href="/expenses"
@@ -153,7 +153,7 @@ export default function SidebarNav(props) {
                 )}
               </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem> */}
+              </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton>
                     <Link

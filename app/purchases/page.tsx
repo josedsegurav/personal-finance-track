@@ -11,18 +11,18 @@ export default async function Purchases() {
     created_at,
     item,
     categories (id, category_name),
-    stores (id, store_name),
     amount,
     taxes,
     notes,
     user_id,
-    purchase_date
+    expenses (id, expense_date, store_id)
 `);
 
 const { data: categories } = await supabase.from("categories").select();
 const { data: stores } = await supabase.from("stores").select();
 
-
+console.log("purchases", purchases);
+  console.log("categories", categories);
   const currentDate = new Date();
   const currentMonth = new Intl.DateTimeFormat("en-US", { month: "long" }).format(currentDate);
 

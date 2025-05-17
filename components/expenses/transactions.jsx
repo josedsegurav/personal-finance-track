@@ -2,26 +2,26 @@
 
 import { useState } from "react";
 
-export default function FiltersAndTransactions(props) {
+export default function Transactions(props) {
   const {
     currentDate,
-    categories,
-    purchases,
+    expenses,
     stores,
-    currentMonthPurchases,
+    currentMonthexpenses,
+    currentMonthExpensesAfterTax,
     currentMonthTaxes,
   } = props;
 
-  const monthPurchases = purchases
-    .filter((purchase) => {
-      new Date(purchase.purchase_date).getFullYear() ===
+  const monthexpenses = expenses
+    .filter((expense) => {
+      new Date(expense.expense_date).getFullYear() ===
         currentDate.getFullYear();
     })
-    .filter((purchase) => {
-      new Date(purchase.purchase_date).getMonth() === currentDate.getMonth();
+    .filter((expense) => {
+      new Date(expense.expense_date).getMonth() === currentDate.getMonth();
     });
 
-  const [filteredPurchases, setFilteredPurchases] = useState(monthPurchases);
+  const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);
   const [emptyFilter, setEmptyFilter] = useState(false);
   const [filters, setFilters] = useState({
     year: currentDate.getFullYear(),
@@ -29,8 +29,11 @@ export default function FiltersAndTransactions(props) {
     category: "all",
     store: "all",
   });
-  const [totalPurchases, setTotalPurchases] = useState(currentMonthPurchases);
-  const [totalTaxes, setTotolTaxes] = useState(currentMonthTaxes);
+  const [totalexpenses, setTotalexpenses] = useState(currentMonthexpenses);
+  const [totalExpensesAfterTax, setTotalExpensesAfterTax] = useState(
+    currentMonthExpensesAfterTax
+  );
+
 
   const months = [
     "January",
@@ -53,42 +56,35 @@ export default function FiltersAndTransactions(props) {
     const newFilters = { ...filters, [name]: value };
     setFilters(newFilters);
 
-    let result = purchases;
+    let result = expenses;
 
     if (newFilters.year != "all") {
       result = result.filter(
-        (purchase) =>
-          new Date(purchase.purchase_date).getFullYear() == newFilters.year
+        (expense) =>
+          new Date(expense.expense_date).getFullYear() == newFilters.year
       );
     }
 
     if (newFilters.month != "all") {
       result = result.filter(
-        (purchase) =>
-          new Date(purchase.purchase_date).getMonth() == newFilters.month
-      );
-    }
-
-    if (newFilters.category != "all") {
-      result = result.filter(
-        (purchase) => purchase.categories.id == newFilters.category
+        (expense) =>
+          new Date(expense.expense_date).getMonth() == newFilters.month
       );
     }
 
     if (newFilters.store != "all") {
       result = result.filter(
-        (purchase) => purchase.stores.id == newFilters.store
+        (expense) => expense.stores.id == newFilters.store
       );
     }
 
-    setTotalPurchases(
-      result.reduce((sum, purchase) => sum + parseFloat(purchase.amount), 0)
+    setTotalexpenses(
+      result.reduce((sum, expense) => sum + parseFloat(expense.amount), 0)
     );
 
-    setTotolTaxes(
+    setTotalExpensesAfterTax(
       result.reduce(
-        (sum, purchase) =>
-          sum + parseFloat(purchase.amount) * parseInt(purchase.taxes),
+        (sum, expense) => sum + parseFloat(expense.total_expense),
         0
       )
     );
@@ -98,10 +94,9 @@ export default function FiltersAndTransactions(props) {
     } else {
       setEmptyFilter(false);
 
-      setFilteredPurchases(result);
+      setFilteredexpenses(result);
     }
   };
-
 
   return (
     <>
@@ -109,7 +104,7 @@ export default function FiltersAndTransactions(props) {
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex flex-wrap items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-paynes-gray">
-            Purchase Transactions
+            Expense Transactions
           </h2>
 
           <div className="flex space-x-4 mt-4 sm:mt-0">
@@ -144,22 +139,6 @@ export default function FiltersAndTransactions(props) {
 
             <div>
               <select
-                name="category"
-                onChange={handleFilter}
-                defaultValue="all"
-                className="py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-              >
-                <option value="all">All Categories</option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.category_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <select
                 name="store"
                 onChange={handleFilter}
                 defaultValue="all"
@@ -176,7 +155,7 @@ export default function FiltersAndTransactions(props) {
           </div>
         </div>
 
-        {/* Purchases Table */}
+        {/* expenses Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-columbia-blue bg-opacity-30">
@@ -188,7 +167,7 @@ export default function FiltersAndTransactions(props) {
                   Description
                 </th>
                 <th className="text-left py-4 px-6 text-paynes-gray font-medium">
-                  Category
+                  Payment Method
                 </th>
                 <th className="text-left py-4 px-6 text-paynes-gray font-medium">
                   Store
@@ -201,9 +180,6 @@ export default function FiltersAndTransactions(props) {
                 </th>
                 <th className="text-right py-4 px-6 text-paynes-gray font-medium">
                   Total
-                </th>
-                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
-                  Notes
                 </th>
               </tr>
             </thead>
@@ -223,39 +199,35 @@ export default function FiltersAndTransactions(props) {
                   </td>
                 </tr>
               ) : (
-                filteredPurchases.map((purchase) => (
-                  <tr key={purchase.id} className="border-b border-gray-100">
+                filteredexpenses.map((expense) => (
+                  <tr key={expense.id} className="border-b border-gray-100">
                     <td className="py-4 px-6 text-paynes-gray">
-                      {purchase.purchase_date}
+                      {expense.expense_date}
                     </td>
                     <td className="py-4 px-6 text-paynes-gray">
-                      {purchase.item}
+                      {expense.description}
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
-                        {purchase.categories.category_name}
+                        {expense.payment_method}
                       </span>
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
-                        {purchase.stores.store_name}
+                        {expense.stores.store_name}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
-                      ${purchase.amount}
+                      ${expense.amount}
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
-                      ${(purchase.taxes * purchase.amount).toFixed(2)}
+                      ${(expense.total_expense - expense.amount).toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                      $
-                      {(
-                        purchase.amount +
-                        purchase.taxes * purchase.amount
-                      ).toFixed(2)}
+                      ${expense.total_expense.toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
-                      {purchase.notes}
+                      {expense.notes}
                     </td>
                   </tr>
                 ))
@@ -270,13 +242,13 @@ export default function FiltersAndTransactions(props) {
                   Total
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-paynes-gray">
-                  ${totalPurchases.toFixed(2)}
+                  ${totalexpenses.toFixed(2)}
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-paynes-gray">
-                  ${totalTaxes.toFixed(2)}
+                  ${(totalExpensesAfterTax - totalexpenses).toFixed(2)}
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                  ${(totalPurchases + totalTaxes).toFixed(2)}
+                  ${(totalExpensesAfterTax).toFixed(2)}
                 </td>
               </tr>
             </tfoot>

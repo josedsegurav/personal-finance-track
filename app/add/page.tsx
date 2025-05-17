@@ -1,216 +1,11 @@
-// "use client";
-
-// import { useState } from 'react';
-
-// export default function AddDataForm() {
-//   const [activeTab, setActiveTab] = useState('income');
-//   const [formData, setFormData] = useState({
-//     type: 'income',
-//     amount: '',
-//     date: new Date().toISOString().split('T')[0],
-//     description: '',
-//     category: '',
-//     taxAmount: '',
-//     store: '',
-//     notes: ''
-//   });
-
-//   console.log(formData);
-
-//   const handleChange = (e: any) => {
-//     const { name, value } = e.target;
-//     setFormData(prev => ({
-//       ...prev,
-//       [name]: value
-//     }));
-//   };
-
-//   const handleSubmit = (e: any) => {
-//     e.preventDefault();
-//     console.log('Form submitted:', formData);
-//     // Here you would connect to Supabase
-//   };
-
-//   const handleTabChange = (tab: string) => {
-//     setActiveTab(tab);
-//     setFormData(prev => ({
-//       ...prev,
-//       type: tab
-//     }));
-//   };
-
-//   // Sample categories
-//   const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other'];
-//   const expenseCategories = ['Food', 'Housing', 'Transportation', 'Entertainment', 'Utilities', 'Shopping', 'Health'];
-
-//   return (
-//     <div className="flex min-h-screen bg-ghost-white">
-//       {/* Sidebar would be here in a full layout */}
-
-//       {/* Main Content */}
-//       <div className="flex-1 p-8">
-//         <h1 className="text-2xl font-semibold text-paynes-gray mb-6">Add Transaction</h1>
-
-//         {/* Tabs for transaction type */}
-//         <div className="flex border-b border-gray-200 mb-6">
-//           <button
-//             className={`py-3 px-6 font-medium ${activeTab === 'income'
-//               ? 'text-glaucous border-b-2 border-glaucous'
-//               : 'text-paynes-gray hover:text-glaucous'}`}
-//             onClick={() => handleTabChange('income')}
-//           >
-//             Income
-//           </button>
-//           <button
-//             className={`py-3 px-6 font-medium ${activeTab === 'expense'
-//               ? 'text-glaucous border-b-2 border-glaucous'
-//               : 'text-paynes-gray hover:text-glaucous'}`}
-//             onClick={() => handleTabChange('expense')}
-//           >
-//             Expense
-//           </button>
-//         </div>
-
-//         {/* Form */}
-//         <div className="bg-white rounded-lg shadow-sm p-6">
-//           <form onSubmit={handleSubmit}>
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//               {/* Amount Field */}
-//               <div>
-//                 <label className="block text-paynes-gray font-medium mb-2">Amount</label>
-//                 <div className="relative">
-//                   <span className="absolute left-3 top-3 text-gray-500">$</span>
-//                   <input
-//                     type="number"
-//                     name="amount"
-//                     value={formData.amount}
-//                     onChange={handleChange}
-//                     className="bg-white text-black w-full py-2 pl-8 pr-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                     placeholder="0.00"
-//                     step="0.01"
-//                     required
-//                   />
-//                 </div>
-//               </div>
-
-//               {/* Date Field */}
-//               <div>
-//                 <label className="block text-paynes-gray font-medium mb-2">Date</label>
-//                 <input
-//                   type="date"
-//                   name="date"
-//                   value={formData.date}
-//                   onChange={handleChange}
-//                   className="bg-white text-black w-full py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                   required
-//                 />
-//               </div>
-
-//               {/* Description Field */}
-//               <div>
-//                 <label className="block text-paynes-gray font-medium mb-2">Description</label>
-//                 <input
-//                   type="text"
-//                   name="description"
-//                   value={formData.description}
-//                   onChange={handleChange}
-//                   className="bg-white text-black w-full py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                   placeholder="Transaction description"
-//                   required
-//                 />
-//               </div>
-
-//               {/* Category Field */}
-//               <div>
-//                 <label className="block text-paynes-gray font-medium mb-2">Category</label>
-//                 <select
-//                   name="category"
-//                   value={formData.category}
-//                   onChange={handleChange}
-//                   className="bg-white text-black w-full py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                   required
-//                 >
-//                   <option value="">Select a category</option>
-//                   {activeTab === 'income' ? (
-//                     incomeCategories.map(cat => (
-//                       <option key={cat} value={cat}>{cat}</option>
-//                     ))
-//                   ) : (
-//                     expenseCategories.map(cat => (
-//                       <option key={cat} value={cat}>{cat}</option>
-//                     ))
-//                   )}
-//                 </select>
-//               </div>
-
-//               {/* Tax Amount Field */}
-//               <div>
-//                 <label className="block text-paynes-gray font-medium mb-2">Tax Amount (Optional)</label>
-//                 <div className="relative">
-//                   <span className="absolute left-3 top-3 text-gray-500">$</span>
-//                   <input
-//                     type="number"
-//                     name="taxAmount"
-//                     value={formData.taxAmount}
-//                     onChange={handleChange}
-//                     className="bg-white text-black w-full py-2 pl-8 pr-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                     placeholder="0.00"
-//                     step="0.01"
-//                   />
-//                 </div>
-//               </div>
-
-//               {/* Store Field - Only for Expenses */}
-//               {activeTab === 'expense' && (
-//                 <div>
-//                   <label className="block text-paynes-gray font-medium mb-2">Store/Vendor</label>
-//                   <input
-//                     type="text"
-//                     name="store"
-//                     value={formData.store}
-//                     onChange={handleChange}
-//                     className="bg-white text-black w-full py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                     placeholder="Where was this purchased?"
-//                   />
-//                 </div>
-//               )}
-
-//               {/* Notes Field */}
-//               <div className="md:col-span-2">
-//                 <label className="block text-paynes-gray font-medium mb-2">Notes (Optional)</label>
-//                 <textarea
-//                   name="notes"
-//                   value={formData.notes}
-//                   onChange={handleChange}
-//                   className="bg-white text-black w-full py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-//                   rows={3}
-//                   placeholder="Additional details about this transaction"
-//                 ></textarea>
-//               </div>
-//             </div>
-
-//             {/* Submit Button */}
-//             <div className="mt-6">
-//               <button
-//                 type="submit"
-//                 className="px-6 py-2 bg-glaucous text-white font-medium rounded hover:bg-opacity-90 transition-colors"
-//               >
-//                 Save Transaction
-//               </button>
-//             </div>
-//           </form>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import Sidebar from "@/components/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import CategoryEdit from "@/components/add/categoriesEdit"
+import StoresEdit from "@/components/add/storesEdit";
 
 // Type definitions
 interface Category {
@@ -404,8 +199,8 @@ export default function Page() {
   return (
     <div className="flex min-h-screen bg-ghost-white">
       {/* Sidebar - Same as your existing sidebar */}
-      <Sidebar activeMenu="add"/>
-      <SidebarTrigger/>
+      <Sidebar activeMenu="add" />
+      <SidebarTrigger />
 
       {/* Main Content */}
       <div className="flex-1 p-8">
@@ -597,6 +392,9 @@ export default function Page() {
                         </option>
                       ))}
                   </select>
+                  <CategoryEdit
+                  categories={categories}
+                  />
                 </div>
 
                 {/* Store Dropdown */}
@@ -623,6 +421,9 @@ export default function Page() {
                         </option>
                       ))}
                   </select>
+                  <StoresEdit
+                  stores={stores}
+                  />
                 </div>
 
                 {/* Amount */}
