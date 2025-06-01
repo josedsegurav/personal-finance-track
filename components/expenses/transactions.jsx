@@ -11,15 +11,15 @@ export default function Transactions(props) {
     currentMonthExpensesAfterTax,
     currentMonthTaxes,
   } = props;
-
+console.log(expenses)
   const monthexpenses = expenses
-    .filter((expense) => {
-      new Date(expense.expense_date).getFullYear() ===
-        currentDate.getFullYear();
-    })
-    .filter((expense) => {
-      new Date(expense.expense_date).getMonth() === currentDate.getMonth();
-    });
+    .filter((expense) =>
+      new Date(expense.expense_date).getFullYear() ==
+        currentDate.getFullYear()
+    )
+    .filter((expense) =>
+      new Date(expense.expense_date).getMonth() === currentDate.getMonth()
+    );
 
   const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);
   const [emptyFilter, setEmptyFilter] = useState(false);
@@ -97,6 +97,8 @@ export default function Transactions(props) {
       setFilteredexpenses(result);
     }
   };
+
+  console.log("Filtered Expenses: ", filteredexpenses);
 
   return (
     <>
@@ -207,10 +209,10 @@ export default function Transactions(props) {
                     <td className="py-4 px-6 text-paynes-gray">
                       {expense.description}
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
+                    <td className="py-4 px-6 text-paynes-gray">
+
                         {expense.payment_method}
-                      </span>
+
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">

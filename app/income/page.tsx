@@ -3,9 +3,18 @@ import { createClient } from '@/utils/supabase/server'
 import FiltersAndMovements from "../../components/income/filtermovements"
 import SidebarNav from '@/components/sidebar';
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { redirect } from "next/navigation";
 
 export default async function Purchases() {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/sign-in");
+  }
+
   const { data: income } = await supabase.from("income").select(`*`);
 
   const currentDate = new Date();

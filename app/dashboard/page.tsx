@@ -1,11 +1,19 @@
 import { createClient } from '@/utils/supabase/server'
 import Transactions from "../../components/dashboard/transactions";
 import SidebarNav from '@/components/sidebar';
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
 
 
 export default async function Page() {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/sign-in");
+  }
 
   const { data: income } = await supabase.from("income").select(`*`);
   const { data: expenses } = await supabase.from("expenses").select(`*`);

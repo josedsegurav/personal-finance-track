@@ -2,9 +2,17 @@ import { createClient } from "@/utils/supabase/server";
 import Transactions from "../../components/expenses/transactions";
 import Sidebar from "@/components/sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
 
 export default async function expenses() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/sign-in");
+  }
 
   const { data: expenses } = await supabase.from("expenses").select(`
     id,
@@ -18,37 +26,39 @@ export default async function expenses() {
     total_expense
 `);
 
+console.log("expenses", expenses);
+
   const { data: stores } = await supabase.from("stores").select();
 
   const currentDate = new Date();
   const currentMonth = new Intl.DateTimeFormat("en-US", {
     month: "long",
   }).format(currentDate);
-console.log(expenses)
-  //   // Calculate totals
+
+
   const totalexpenses = expenses
     ? expenses
-        .filter((expense: any) => {
-          new Date(expense.expense_date).getFullYear() ===
-            currentDate.getFullYear();
-        })
-        .filter((expense: any) => {
-          new Date(expense.expense_date).getMonth() ===
-            currentDate.getMonth();
-        })
+        .filter((expense: any) =>
+          new Date(expense.expense_date).getFullYear() ==
+            currentDate.getFullYear()
+        )
+        .filter((expense: any) =>
+          new Date(expense.expense_date).getMonth() ==
+            currentDate.getMonth()
+        )
         .reduce((sum: any, expense: any) => sum + expense.amount, 0)
     : 0;
 
     const totalExpensesAfterTax = expenses
     ? expenses
-        .filter((expense: any) => {
+        .filter((expense: any) =>
           new Date(expense.expense_date).getFullYear() ===
-            currentDate.getFullYear();
-        })
-        .filter((expense: any) => {
+            currentDate.getFullYear()
+        )
+        .filter((expense: any) =>
           new Date(expense.expense_date).getMonth() ===
-            currentDate.getMonth();
-        })
+            currentDate.getMonth()
+        )
         .reduce((sum: any, expense: any) => sum + expense.total_expense, 0)
     : 0;
 

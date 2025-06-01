@@ -4,60 +4,45 @@ import Sidebar from "@/components/sidebar";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import CategoryEdit from "@/components/add/categoriesEdit"
-import StoresEdit from "@/components/add/storesEdit";
+import { redirect } from "next/navigation";
+import IncomeForm from "@/components/add/incomeform";
+import ExpenseForm from "@/components/add/expenseform";
 
 // Type definitions
-interface Category {
-  id: number;
-  category_name: string;
-}
-
 interface Store {
   id: number;
   store_name: string;
 }
 
-interface FormData {
-  description: string;
-  gross_income: string;
-  net_income: string;
-  item: string;
-  category: string;
-  store: string;
-  amount: string;
-  taxes: string;
-  notes: string;
-  date: string;
+interface Category {
+  id: number;
+  category_name: string;
 }
 
 export default function Page() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [stores, setStores] = useState<Store[] | null>(null);
   const [loading, setLoading] = useState({
-    categories: true,
     stores: true,
   });
   const [error, setError] = useState<string | null>(null);
 
-  const taxOptions = ["0%", "5%", "12%"];
   const supabase = createClient();
   const [activeTab, setActiveTab] = useState("income");
 
-  const [formData, setFormData] = useState<FormData>({
-    description: "",
-    gross_income: "",
-    net_income: "",
-    item: "",
-    category: "",
-    store: "",
-    amount: "",
-    taxes: "0%",
-    notes: "",
-    date: new Date().toISOString().split("T")[0],
-  });
-
   useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return redirect("/sign-in");
+      }
+    };
+
+    getUser();
+
     const fetchCategories = async () => {
       try {
         setLoading((prev) => ({ ...prev, categories: true }));
@@ -68,7 +53,6 @@ export default function Page() {
         if (error) throw error;
 
         setCategories(categories);
-        console.log("Categories:", categories);
       } catch (err) {
         console.error("Error fetching categories:", err);
         setError("Failed to load categories");
@@ -88,7 +72,6 @@ export default function Page() {
         if (error) throw error;
 
         setStores(data);
-        console.log("Stores:", data);
       } catch (err) {
         console.error("Error fetching stores:", err);
         setError("Failed to load stores");
@@ -103,73 +86,6 @@ export default function Page() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      // Determine which table to insert into based on activeTab
-      const table = activeTab === "income" ? "income" : "purchases";
-
-      const { data, error } = await supabase
-        .from(table)
-        .insert([
-          activeTab === "income"
-            ? {
-                description: formData.description,
-                gross_income: parseFloat(formData.gross_income),
-                net_income: parseFloat(formData.net_income),
-                income_date: formData.date,
-              }
-            : {
-                item: formData.item,
-                category_id: parseInt(formData.category),
-                store_id: parseInt(formData.store),
-                amount: parseFloat(formData.amount),
-                taxes: parseFloat(formData.taxes),
-                notes: formData.notes,
-                purchase_date: formData.date,
-              },
-        ])
-        .select();
-
-      if (error) throw error;
-
-      console.log(`${activeTab} added:`, data);
-      alert(
-        `${activeTab === "income" ? "Income" : "Purchase"} added successfully!`
-      );
-
-      // Reset form
-      setFormData({
-        description: "",
-        gross_income: "",
-        net_income: "",
-        item: "",
-        category: "",
-        store: "",
-        amount: "",
-        taxes: "0%",
-        notes: "",
-        date: new Date().toISOString().split("T")[0],
-      });
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      alert(`Failed to add ${activeTab === "income" ? "income" : "purchase"}`);
-    }
   };
 
   // Debugging UI
@@ -187,7 +103,7 @@ export default function Page() {
     );
   }
 
-  if (loading.categories || loading.stores) {
+  if (loading.stores) {
     return (
       <div className="p-4">
         Loading data...
@@ -222,286 +138,16 @@ export default function Page() {
                 ? "text-glaucous border-b-2 border-glaucous"
                 : "text-paynes-gray hover:text-glaucous"
             }`}
-            onClick={() => handleTabChange("purchase")}
+            onClick={() => handleTabChange("expense")}
           >
-            Purchase
+            Expense
           </button>
         </div>
 
         {/* Income Form  */}
-        {activeTab === "income" && (
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="Salary, Freelance, Bonus, etc."
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="date"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="gross_income"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Gross Income ($)
-                  </label>
-                  <input
-                    type="number"
-                    id="gross_income"
-                    name="gross_income"
-                    value={formData.gross_income}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="net_income"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Net Income ($)
-                  </label>
-                  <input
-                    type="number"
-                    id="net_income"
-                    name="net_income"
-                    value={formData.net_income}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
-                >
-                  Add Income
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+        {activeTab === "income" && <IncomeForm />}
         {/* Purchases form */}
-        {activeTab === "purchase" && (
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Item Name */}
-                <div>
-                  <label
-                    htmlFor="item"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Item Name
-                  </label>
-                  <input
-                    type="text"
-                    id="item"
-                    name="item"
-                    value={formData.item}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="What did you buy?"
-                    required
-                  />
-                </div>
-
-                {/* Purchase Date */}
-                <div>
-                  <label
-                    htmlFor="date_of_purchase"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Date of Purchase
-                  </label>
-                  <input
-                    type="date"
-                    id="date_of_purchase"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                {/* Category Dropdown */}
-                <div>
-                  <label
-                    htmlFor="category"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories &&
-                      categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.category_name}
-                        </option>
-                      ))}
-                  </select>
-                  <CategoryEdit
-                  categories={categories}
-                  />
-                </div>
-
-                {/* Store Dropdown */}
-                <div>
-                  <label
-                    htmlFor="store"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Store
-                  </label>
-                  <select
-                    id="store"
-                    name="store"
-                    value={formData.store}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select a store</option>
-                    {stores &&
-                      stores.map((store) => (
-                        <option key={store.id} value={store.id}>
-                          {store.store_name}
-                        </option>
-                      ))}
-                  </select>
-                  <StoresEdit
-                  stores={stores}
-                  />
-                </div>
-
-                {/* Amount */}
-                <div>
-                  <label
-                    htmlFor="amount"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Amount ($)
-                  </label>
-                  <input
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                {/* Tax Rate */}
-                <div>
-                  <label
-                    htmlFor="taxes"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Tax Rate
-                  </label>
-                  <select
-                    id="taxes"
-                    name="taxes"
-                    value={formData.taxes}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                  >
-                    {taxOptions.map((tax) => (
-                      <option key={tax} value={tax}>
-                        {tax}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Full-width Notes field */}
-                <div className="md:col-span-2">
-                  <label
-                    htmlFor="notes"
-                    className="block text-sm font-medium text-paynes-gray mb-2"
-                  >
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    placeholder="Any additional details about this purchase..."
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
-                >
-                  Add Purchase
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+        {activeTab === "expense" && <ExpenseForm categories={categories} stores={stores} />}
       </div>
     </div>
   );

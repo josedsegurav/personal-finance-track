@@ -13,13 +13,13 @@ export default function FiltersAndTransactions(props) {
   } = props;
 
   const monthPurchases = purchases
-    .filter((purchase) => {
-      new Date(purchase.purchase_date).getFullYear() ===
-        currentDate.getFullYear();
-    })
-    .filter((purchase) => {
-      new Date(purchase.purchase_date).getMonth() === currentDate.getMonth();
-    });
+    .filter((purchase) =>
+      new Date(purchase.expenses.expense_date).getFullYear() ===
+        currentDate.getFullYear()
+    )
+    .filter((purchase) =>
+      new Date(purchase.expenses.expense_date).getUTCMonth() === currentDate.getMonth()
+    );
 
   const [filteredPurchases, setFilteredPurchases] = useState(monthPurchases);
   const [emptyFilter, setEmptyFilter] = useState(false);
@@ -30,7 +30,7 @@ export default function FiltersAndTransactions(props) {
     store: "all",
   });
   const [totalPurchases, setTotalPurchases] = useState(currentMonthPurchases);
-  const [totalTaxes, setTotolTaxes] = useState(currentMonthTaxes);
+  const [totalTaxes, setTotalTaxes] = useState(currentMonthTaxes);
 
   const months = [
     "January",
@@ -58,14 +58,14 @@ export default function FiltersAndTransactions(props) {
     if (newFilters.year != "all") {
       result = result.filter(
         (purchase) =>
-          new Date(purchase.purchase_date).getFullYear() == newFilters.year
+          new Date(purchase.expenses.expense_date).getFullYear() == newFilters.year
       );
     }
 
     if (newFilters.month != "all") {
       result = result.filter(
         (purchase) =>
-          new Date(purchase.purchase_date).getMonth() == newFilters.month
+          new Date(purchase.expenses.expense_date).getUTCMonth() == newFilters.month
       );
     }
 
@@ -77,7 +77,7 @@ export default function FiltersAndTransactions(props) {
 
     if (newFilters.store != "all") {
       result = result.filter(
-        (purchase) => purchase.stores.id == newFilters.store
+        (purchase) => purchase.expenses.store_id == newFilters.store
       );
     }
 
@@ -85,7 +85,7 @@ export default function FiltersAndTransactions(props) {
       result.reduce((sum, purchase) => sum + parseFloat(purchase.amount), 0)
     );
 
-    setTotolTaxes(
+    setTotalTaxes(
       result.reduce(
         (sum, purchase) =>
           sum + parseFloat(purchase.amount) * parseInt(purchase.taxes),
@@ -102,6 +102,7 @@ export default function FiltersAndTransactions(props) {
     }
   };
 
+  console.log("Filtered Purchases:", filteredPurchases);
 
   return (
     <>
@@ -226,7 +227,7 @@ export default function FiltersAndTransactions(props) {
                 filteredPurchases.map((purchase) => (
                   <tr key={purchase.id} className="border-b border-gray-100">
                     <td className="py-4 px-6 text-paynes-gray">
-                      {purchase.purchase_date}
+                      {purchase.expenses.expense_date}
                     </td>
                     <td className="py-4 px-6 text-paynes-gray">
                       {purchase.item}
@@ -238,20 +239,20 @@ export default function FiltersAndTransactions(props) {
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
-                        {purchase.stores.store_name}
+                        {purchase.expenses.stores.store_name}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
                       ${purchase.amount}
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
-                      ${(purchase.taxes * purchase.amount).toFixed(2)}
+                      ${((purchase.taxes / 100) * purchase.amount).toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right font-medium text-bittersweet">
                       $
                       {(
                         purchase.amount +
-                        purchase.taxes * purchase.amount
+                        (purchase.taxes / 100) * purchase.amount
                       ).toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
@@ -273,10 +274,10 @@ export default function FiltersAndTransactions(props) {
                   ${totalPurchases.toFixed(2)}
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-paynes-gray">
-                  ${totalTaxes.toFixed(2)}
+                  ${(totalTaxes/100).toFixed(2)}
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                  ${(totalPurchases + totalTaxes).toFixed(2)}
+                  ${(totalPurchases + (totalTaxes/100)).toFixed(2)}
                 </td>
               </tr>
             </tfoot>

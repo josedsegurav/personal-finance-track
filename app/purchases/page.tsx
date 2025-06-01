@@ -1,10 +1,18 @@
-import { createClient } from '@/utils/supabase/server'
-import FiltersAndTransactions from "../../components/purchases/filterstransactions"
+import { createClient } from "@/utils/supabase/server";
+import FiltersAndTransactions from "../../components/purchases/filterstransactions";
 import Sidebar from "@/components/sidebar";
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
 
 export default async function Purchases() {
-  const supabase = await createClient()
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/sign-in");
+  }
 
   const { data: purchases } = await supabase.from("purchases").select(`
     id,
@@ -15,44 +23,68 @@ export default async function Purchases() {
     taxes,
     notes,
     user_id,
-    expenses (id, expense_date, store_id)
-`);
+    expenses (
+      id,
+      expense_date,
+      stores (
+        id,
+        store_name
+      )
+    )
+  `);
+  const { data: categories } = await supabase.from("categories").select();
+  const { data: stores } = await supabase.from("stores").select();
 
-const { data: categories } = await supabase.from("categories").select();
-const { data: stores } = await supabase.from("stores").select();
-
-console.log("purchases", purchases);
+  console.log("purchases", purchases);
   console.log("categories", categories);
   const currentDate = new Date();
-  const currentMonth = new Intl.DateTimeFormat("en-US", { month: "long" }).format(currentDate);
+  const currentMonth = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+  }).format(currentDate);
 
-//   // Calculate totals
+  //   // Calculate totals
   const totalPurchases = purchases
-    ? purchases.filter((purchase: any) => {
-      new Date(purchase.purchase_date).getFullYear() === currentDate.getFullYear()
-    }).filter((purchase: any) => {
-      new Date(purchase.purchase_date).getMonth() === currentDate.getMonth()
-    }).reduce((sum: any, purchase: any) => sum + purchase.amount, 0)
+    ? purchases
+        .filter(
+          (purchase: any) =>
+            new Date(purchase.expenses.expense_date).getFullYear() ===
+            currentDate.getFullYear()
+        )
+        .filter(
+          (purchase: any) =>
+            new Date(purchase.expenses.expense_date).getUTCMonth() ===
+            currentDate.getUTCMonth()
+        )
+        .reduce((sum: any, purchase: any) => sum + purchase.amount, 0)
     : 0;
 
   const totalTaxes = purchases
-    ? purchases.filter((purchase: any) => {
-      new Date(purchase.purchase_date).getFullYear() === currentDate.getFullYear()
-    }).filter((purchase: any) => {
-      new Date(purchase.purchase_date).getMonth() === currentDate.getMonth()
-    }).reduce(
-        (sum: any, purchase: any) =>
-          sum + purchase.amount * purchase.taxes,
-        0
-      )
+    ? purchases
+        .filter(
+          (purchase: any) =>
+            new Date(purchase.expenses.expense_date).getFullYear() ==
+            currentDate.getFullYear()
+        )
+        .filter(
+          (purchase: any) =>
+            new Date(purchase.expenses.expense_date).getUTCMonth() ==
+            currentDate.getMonth()
+        )
+        .reduce(
+          (sum: any, purchase: any) => sum + purchase.amount * purchase.taxes,
+          0
+        )
     : 0;
+
+  console.log("totalPurchases", totalPurchases);
+  console.log("totalTaxes", totalTaxes);
 
   return (
     <>
       <div className="flex min-h-screen bg-ghost-white">
         {/* Sidebar would be here in a full layout */}
-        <Sidebar activeMenu="purchases"/>
-        <SidebarTrigger/>
+        <Sidebar activeMenu="purchases" />
+        <SidebarTrigger />
 
         {/* Main Content */}
         <div className="flex-1 p-8">
@@ -79,10 +111,10 @@ console.log("purchases", purchases);
                 Total Taxes
               </h3>
               <p className="text-2xl font-semibold text-paynes-gray">
-                ${totalTaxes.toFixed(2)}
+                ${(totalTaxes / 100).toFixed(2)}
               </p>
               <p className="text-sm text-paynes-gray mt-2">
-              {currentMonth} {currentDate.getFullYear()}
+                {currentMonth} {currentDate.getFullYear()}
               </p>
             </div>
 
@@ -116,14 +148,13 @@ console.log("purchases", purchases);
           {/* Filters and Transactions */}
 
           <FiltersAndTransactions
-          currentDate = {currentDate}
-          categories = {categories}
-          purchases = {purchases}
-          stores = {stores}
-          currentMonthPurchases = {totalPurchases}
-          currentMonthTaxes = {totalTaxes}
+            currentDate={currentDate}
+            categories={categories}
+            purchases={purchases}
+            stores={stores}
+            currentMonthPurchases={totalPurchases}
+            currentMonthTaxes={totalTaxes}
           />
-
         </div>
       </div>
     </>
