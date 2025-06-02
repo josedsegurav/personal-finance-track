@@ -25,6 +25,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Button } from "./ui/button";
+import { signOutAction } from "@/app/actions";
 
 export default function SidebarNav(props) {
   const { activeMenu } = props;
@@ -244,8 +246,8 @@ export default function SidebarNav(props) {
                 <User size={18} className="text-paynes-gray" />
               </div>
               <div>
-                <p className="text-sm font-medium">User Settings</p>
-                <p className="text-xs opacity-70">Manage account</p>
+                <Button className="text-sm font-medium" onClick={signOutAction}>Log Out</Button>
+                {/* <p className="text-xs opacity-70">Manage account</p> */}
               </div>
             </div>
           </div>
