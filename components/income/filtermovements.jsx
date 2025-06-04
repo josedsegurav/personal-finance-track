@@ -20,7 +20,7 @@ export default function FiltersAndMovements(props) {
     )
     .filter(
       (eachIncome) =>
-        new Date(eachIncome.income_date).getMonth() == currentDate.getMonth()
+        new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
     );
 
   const [emptyFilter, setEmptyFilter] = useState(false);
@@ -68,7 +68,7 @@ export default function FiltersAndMovements(props) {
     if (newFilters.month != "all") {
       result = result.filter(
         (eachIncome) =>
-          new Date(eachIncome.income_date).getMonth() == newFilters.month
+          new Date(eachIncome.income_date).getUTCMonth() == newFilters.month
       );
     }
     setTotalGrossIncome(

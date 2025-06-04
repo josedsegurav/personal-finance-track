@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import Transactions from "../../components/dashboard/transactions";
+import Transactions from "../../../components/dashboard/transactions";
 import SidebarNav from '@/components/sidebar';
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
@@ -58,11 +58,14 @@ export default async function Page() {
 
 
   return (
-    // <pre>{JSON.stringify(income, null, 2)}</pre>
+    <>
+
+    <SidebarNav activeMenu="dashboard"/>
+
     <div className="flex min-h-screen bg-ghost-white">
       {/* Sidebar */}
-    <SidebarNav activeMenu="dashboard"/>
-    <SidebarTrigger/>
+      <SidebarTrigger />
+
 
 
       {/* Main Content */}
@@ -145,5 +148,6 @@ export default async function Page() {
         </div>
       </div>
     </div>
+    </>
   );
 }

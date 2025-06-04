@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import FiltersAndTransactions from "../../components/purchases/filterstransactions";
+import FiltersAndTransactions from "../../../components/purchases/filterstransactions";
 import Sidebar from "@/components/sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
@@ -81,10 +81,11 @@ export default async function Purchases() {
 
   return (
     <>
+    <Sidebar activeMenu="purchases" />
+
       <div className="flex min-h-screen bg-ghost-white">
         {/* Sidebar would be here in a full layout */}
-        <Sidebar activeMenu="purchases" />
-        <SidebarTrigger />
+<SidebarTrigger />
 
         {/* Main Content */}
         <div className="flex-1 p-8">
@@ -118,18 +119,6 @@ export default async function Purchases() {
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
-                Average purchase
-              </h3>
-              <p className="text-2xl font-semibold text-paynes-gray">
-                $
-                {purchases
-                  ? (totalPurchases / purchases.length).toFixed(2)
-                  : "0.00"}
-              </p>
-              <p className="text-sm text-paynes-gray mt-2">Per transaction</p>
-            </div>
           </div>
 
           {/* Chart Section */}

@@ -1,10 +1,7 @@
-import DeployButton from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import HeaderAuth from "@/components/header-auth";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
+
 import { Geist } from "next/font/google";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import Link from "next/link";
+import { cookies } from "next/headers"
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -22,15 +19,18 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+   const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "false"
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-ghost-white text-foreground">
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={defaultOpen}>
+
           <main className="mx-auto">
             <div>
               <div>{children}</div>

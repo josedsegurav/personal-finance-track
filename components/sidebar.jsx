@@ -33,10 +33,9 @@ export default function SidebarNav(props) {
 
   const [activeLink, setActiveLink] = useState(activeMenu);
 
-
   return (
     <>
-      <Sidebar>
+      <Sidebar collapsible="offcanvas">
         <SidebarHeader>
           <h1 className="text-2xl font-bold text-glaucous">
             <span className="text-bittersweet">Finance</span> Tracker
@@ -50,15 +49,22 @@ export default function SidebarNav(props) {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton
+                    className="w-8 h-8 mr-3 flex items-center justify-center rounded-md group-hover:bg-columbia-blue transition-colors"
+                    style={
+                      activeLink === "dashboard"
+                        ? { backgroundColor: "#BDD5EA" }
+                        : { backgroundColor: "#F7F7FF" }
+                    }
+                  >
                     <Link
-                      href="/dashboard"
-                      className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      style={
-                        activeLink === "dashboard"
-                          ? { backgroundColor: "#F7F7FF" }
-                          : {}
-                      }
+                      href="/home/dashboard"
+                      className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
+                      // style={
+                      //   activeLink === "dashboard"
+                      //     ? { backgroundColor: "#F7F7FF" }
+                      //     : {}
+                      // }
                     >
                       <span
                         className="w-8 h-8 mr-3 flex items-center justify-center rounded-md group-hover:bg-columbia-blue transition-colors"
@@ -72,41 +78,44 @@ export default function SidebarNav(props) {
                           size={18}
                           className={
                             activeLink === "dashboard"
-                              ? "text-white"
+                              ? "text-white pr-4"
                               : "text-paynes-gray"
                           }
                         />
                       </span>
-                      <span className="font-medium">Dashboard</span>
-                      {activeLink === "dashboard" ? (
+                      <span className="font-medium ml-2">Dashboard</span>
+                      {/* {activeLink === "dashboard" ? (
                         <span className="ml-auto text-xs bg-white px-2 py-1 rounded-md">
                           Active
                         </span>
                       ) : (
                         ""
-                      )}
+                      )} */}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton
+                    style={
+                      activeLink === "income"
+                        ? { backgroundColor: "#BDD5EA" }
+                        : { backgroundColor: "#F7F7FF" }
+                    }
+                  >
                     <Link
-                      href="/income"
-                      className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white font-medium transition-colors group"
-                      style={
-                        activeLink === "income"
-                          ? { backgroundColor: "#F7F7FF" }
-                          : {}
-                      }
+                      href="/home/income"
+                      className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white font-medium transition-colors group"
+                      // style={
+                      //   activeLink === "income"
+                      //     ? { backgroundColor: "#F7F7FF" }
+                      //     : {}
+                      // }
                     >
-                      <span
-                        className="w-8 h-8 mr-3 flex items-center justify-center rounded-md"
-                        style={
+                      <span className="w-8 h-8 mr-3 flex items-center justify-center rounded-md" style={
                           activeLink === "income"
                             ? { backgroundColor: "#BDD5EA" }
                             : { backgroundColor: "#F7F7FF" }
-                        }
-                      >
+                        }>
                         <ArrowDownRight
                           size={18}
                           className={
@@ -116,65 +125,81 @@ export default function SidebarNav(props) {
                           }
                         />
                       </span>
-                      <span>Income</span>
-                      {activeLink === "income" ? (
+                      <span className="font-medium ml-2">Income</span>
+                      {/* {activeLink === "income" ? (
                         <span className="ml-auto text-xs bg-white px-2 py-1 rounded-md">
                           Active
                         </span>
                       ) : (
                         ""
-                      )}
+                      )} */}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Link
-                href="/expenses"
-                className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                style={
-                  activeLink === "expenses"
-                    ? { backgroundColor: "#F7F7FF" }
-                    : {}
-                }
-              >
-                <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors"
-                style={
-                  activeLink === "expenses" ? { backgroundColor: "#BDD5EA" } : { backgroundColor: "#F7F7FF" }
-                }
-                >
-                  <ArrowUpRight size={18} className={activeLink === "expenses" ? "text-white" : "text-paynes-gray"} />
-                </span>
-                <span>Expenses</span>
-                {activeLink === "expenses" ? (
+                  <SidebarMenuButton
+                    style={
+                      activeLink === "expenses"
+                        ? { backgroundColor: "#BDD5EA" }
+                        : { backgroundColor: "#F7F7FF" }
+                    }
+                  >
+                    <Link
+                      href="/home/expenses"
+                      className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
+                      // style={
+                      //   activeLink === "expenses"
+                      //     ? { backgroundColor: "#F7F7FF" }
+                      //     : {}
+                      // }
+                    >
+                      <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
+                          activeLink === "expenses"
+                            ? { backgroundColor: "#BDD5EA" }
+                            : { backgroundColor: "#F7F7FF" }
+                        }>
+                        <ArrowUpRight
+                          size={18}
+                          className={
+                            activeLink === "expenses"
+                              ? "text-white"
+                              : "text-paynes-gray"
+                          }
+                        />
+                      </span>
+                      <span className="font-medium ml-2">Expenses</span>
+                      {/* {activeLink === "expenses" ? (
                   <span className="ml-auto text-xs bg-white px-2 py-1 rounded-md">
                     Active
                   </span>
                 ) : (
                   ""
-                )}
-              </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                )} */}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton
+                    style={
+                      activeLink === "purchases"
+                        ? { backgroundColor: "#BDD5EA" }
+                        : { backgroundColor: "#F7F7FF" }
+                    }
+                  >
                     <Link
-                      href="/purchases"
-                      className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      style={
-                        activeLink === "purchases"
-                          ? { backgroundColor: "#F7F7FF" }
-                          : {}
-                      }
+                      href="/home/purchases"
+                      className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
+                      // style={
+                      //   activeLink === "purchases"
+                      //     ? { backgroundColor: "#F7F7FF" }
+                      //     : {}
+                      // }
                     >
-                      <span
-                        className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors"
-                        style={
+                      <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
                           activeLink === "purchases"
                             ? { backgroundColor: "#BDD5EA" }
                             : { backgroundColor: "#F7F7FF" }
-                        }
-                      >
+                        }>
                         <ShoppingCart
                           size={18}
                           className={
@@ -184,36 +209,40 @@ export default function SidebarNav(props) {
                           }
                         />
                       </span>
-                      <span>Purchases</span>
-                      {activeLink === "purchases" ? (
+                      <span className="font-medium ml-2">Purchases</span>
+                      {/* {activeLink === "purchases" ? (
                         <span className="ml-auto text-xs bg-white px-2 py-1 rounded-md">
                           Active
                         </span>
                       ) : (
                         ""
-                      )}
+                      )} */}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton
+                    style={
+                      activeLink === "add"
+                        ? { backgroundColor: "#BDD5EA" }
+                        : { backgroundColor: "#F7F7FF" }
+                    }
+                  >
                     <Link
-                      href="/add"
-                      className="flex items-center px-4 py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      style={
-                        activeLink === "add"
-                          ? { backgroundColor: "#F7F7FF" }
-                          : {}
-                      }
+                      href="/home/add"
+                      className="flex items-center
+                       py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
+                      // style={
+                      //   activeLink === "add"
+                      //     ? { backgroundColor: "#F7F7FF" }
+                      //     : {}
+                      // }
                     >
-                      <span
-                        className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors"
-                        style={
+                      <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
                           activeLink === "add"
                             ? { backgroundColor: "#BDD5EA" }
                             : { backgroundColor: "#F7F7FF" }
-                        }
-                      >
+                        }>
                         <PlusCircle
                           size={18}
                           className={
@@ -223,14 +252,14 @@ export default function SidebarNav(props) {
                           }
                         />
                       </span>
-                      <span>Add Data</span>
-                      {activeLink === "add" ? (
+                      <span className="font-medium ml-2">Add Data</span>
+                      {/* {activeLink === "add" ? (
                         <span className="ml-auto text-xs bg-white px-2 py-1 rounded-md">
                           Active
                         </span>
                       ) : (
                         ""
-                      )}
+                      )} */}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -246,7 +275,9 @@ export default function SidebarNav(props) {
                 <User size={18} className="text-paynes-gray" />
               </div>
               <div>
-                <Button className="text-sm font-medium" onClick={signOutAction}>Log Out</Button>
+                <Button className="text-sm font-medium" onClick={signOutAction}>
+                  Log Out
+                </Button>
                 {/* <p className="text-xs opacity-70">Manage account</p> */}
               </div>
             </div>
@@ -254,7 +285,6 @@ export default function SidebarNav(props) {
         </SidebarFooter>
         <SidebarRail></SidebarRail>
       </Sidebar>
-
     </>
   );
 }

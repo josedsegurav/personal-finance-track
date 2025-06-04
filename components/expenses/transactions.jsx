@@ -11,21 +11,20 @@ export default function Transactions(props) {
     currentMonthExpensesAfterTax,
     currentMonthTaxes,
   } = props;
-console.log(expenses)
   const monthexpenses = expenses
     .filter((expense) =>
       new Date(expense.expense_date).getFullYear() ==
         currentDate.getFullYear()
     )
     .filter((expense) =>
-      new Date(expense.expense_date).getMonth() === currentDate.getMonth()
+      new Date(expense.expense_date).getUTCMonth() === currentDate.getMonth()
     );
 
   const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);
   const [emptyFilter, setEmptyFilter] = useState(false);
   const [filters, setFilters] = useState({
     year: currentDate.getFullYear(),
-    month: currentDate.getMonth(),
+    month: currentDate.getUTCMonth(),
     category: "all",
     store: "all",
   });
@@ -68,7 +67,7 @@ console.log(expenses)
     if (newFilters.month != "all") {
       result = result.filter(
         (expense) =>
-          new Date(expense.expense_date).getMonth() == newFilters.month
+          new Date(expense.expense_date).getUTCMonth() == newFilters.month
       );
     }
 

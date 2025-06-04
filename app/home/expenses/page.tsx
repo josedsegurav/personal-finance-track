@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import Transactions from "../../components/expenses/transactions";
+import Transactions from "../../../components/expenses/transactions";
 import Sidebar from "@/components/sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
@@ -43,7 +43,7 @@ console.log("expenses", expenses);
             currentDate.getFullYear()
         )
         .filter((expense: any) =>
-          new Date(expense.expense_date).getMonth() ==
+          new Date(expense.expense_date).getUTCMonth() ==
             currentDate.getMonth()
         )
         .reduce((sum: any, expense: any) => sum + expense.amount, 0)
@@ -56,7 +56,7 @@ console.log("expenses", expenses);
             currentDate.getFullYear()
         )
         .filter((expense: any) =>
-          new Date(expense.expense_date).getMonth() ===
+          new Date(expense.expense_date).getUTCMonth() ===
             currentDate.getMonth()
         )
         .reduce((sum: any, expense: any) => sum + expense.total_expense, 0)
@@ -68,15 +68,17 @@ console.log("expenses", expenses);
 
   return (
     <>
+    <Sidebar activeMenu="expenses" />
+
       <div className="flex min-h-screen bg-ghost-white">
         {/* Sidebar would be here in a full layout */}
-        <Sidebar activeMenu="expenses" />
-        <SidebarTrigger />
+      <SidebarTrigger />
+
 
         {/* Main Content */}
         <div className="flex-1 p-8">
           <h1 className="text-2xl font-semibold text-paynes-gray mb-6">
-            expenses
+            Expenses
           </h1>
 
           {/* Summary Cards */}

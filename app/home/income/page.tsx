@@ -1,6 +1,6 @@
 
 import { createClient } from '@/utils/supabase/server'
-import FiltersAndMovements from "../../components/income/filtermovements"
+import FiltersAndMovements from "../../../components/income/filtermovements"
 import SidebarNav from '@/components/sidebar';
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { redirect } from "next/navigation";
@@ -26,7 +26,7 @@ export default async function Purchases() {
     (eachIncome: any) =>
       new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
         (eachIncome: any) =>
-          new Date(eachIncome.income_date).getMonth() == currentDate.getMonth()
+          new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
       ).reduce((sum: any, eachIncome: any) => sum + eachIncome.gross_income, 0)
   : 0;
 
@@ -35,7 +35,7 @@ export default async function Purchases() {
       (eachIncome: any) =>
         new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
           (eachIncome: any) =>
-            new Date(eachIncome.income_date).getMonth() == currentDate.getMonth()
+            new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
         ).reduce((sum: any, eachIncome: any) => sum + eachIncome.net_income, 0)
     : 0;
 
@@ -44,7 +44,7 @@ export default async function Purchases() {
     (eachIncome: any) =>
       new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
         (eachIncome: any) =>
-          new Date(eachIncome.income_date).getMonth() == currentDate.getMonth()
+          new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
       ).reduce(
         (sum: any, eachIncome: any) =>
           sum + eachIncome.gross_income - eachIncome.net_income,
@@ -55,10 +55,12 @@ export default async function Purchases() {
 
   return (
     <>
+    <SidebarNav activeMenu="income"/>
+
       <div className="flex min-h-screen bg-ghost-white">
         {/* Sidebar would be here in a full layout */}
-        <SidebarNav activeMenu="income"/>
-        <SidebarTrigger/>
+      <SidebarTrigger />
+
 
         {/* Main Content */}
         <div className="flex-1 p-8">
