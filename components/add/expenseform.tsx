@@ -160,8 +160,6 @@ export default function ExpenseForm({
 
             console.log("Purchase added:", data[0]);
 
-            alert("Purchase added successfully!");
-            // redirect("/expenses");
           } catch (err) {
             console.error("Error submitting form:", err);
             alert("Failed to add purchase");
@@ -170,6 +168,7 @@ export default function ExpenseForm({
       }
 
       console.log(`Expense added:`, data[0]);
+
 
       // Reset form
       setformExpenseData({
@@ -180,8 +179,15 @@ export default function ExpenseForm({
         total_expense: "",
         date: new Date().toISOString().split("T")[0],
       });
+      setFormPurchaseData({
+        category: "",
+        item: "",
+        purchaseAmount: "",
+        taxes: "0%",
+        notes: "",
+      });
+      setPurchasesArray([]);
       alert("Expense added successfully!");
-      redirect("/expenses");
     } catch (err) {
       console.error("Error submitting form:", err);
       alert("Failed to add expense");
