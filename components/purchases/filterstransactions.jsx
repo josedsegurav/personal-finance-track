@@ -77,7 +77,7 @@ export default function FiltersAndTransactions(props) {
 
     if (newFilters.store != "all") {
       result = result.filter(
-        (purchase) => purchase.expenses.store_id == newFilters.store
+        (purchase) => purchase.expenses.stores.id == newFilters.store
       );
     }
 
