@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import EditTransaction from "../editTransaction";
+import PurchasesDialog from "./purchasesDialog";
 
 export default function Transactions(props) {
   const {
@@ -12,12 +14,14 @@ export default function Transactions(props) {
     currentMonthTaxes,
   } = props;
   const monthexpenses = expenses
-    .filter((expense) =>
-      new Date(expense.expense_date).getFullYear() ==
+    .filter(
+      (expense) =>
+        new Date(expense.expense_date).getFullYear() ==
         currentDate.getFullYear()
     )
-    .filter((expense) =>
-      new Date(expense.expense_date).getUTCMonth() === currentDate.getMonth()
+    .filter(
+      (expense) =>
+        new Date(expense.expense_date).getUTCMonth() === currentDate.getMonth()
     );
 
   const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);
@@ -32,7 +36,6 @@ export default function Transactions(props) {
   const [totalExpensesAfterTax, setTotalExpensesAfterTax] = useState(
     currentMonthExpensesAfterTax
   );
-
 
   const months = [
     "January",
@@ -182,6 +185,9 @@ export default function Transactions(props) {
                 <th className="text-right py-4 px-6 text-paynes-gray font-medium">
                   Total
                 </th>
+                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -206,12 +212,10 @@ export default function Transactions(props) {
                       {expense.expense_date}
                     </td>
                     <td className="py-4 px-6 text-paynes-gray">
-                      {expense.description}
+                      <PurchasesDialog expense={expense}/>
                     </td>
                     <td className="py-4 px-6 text-paynes-gray">
-
-                        {expense.payment_method}
-
+                      {expense.payment_method}
                     </td>
                     <td className="py-4 px-6">
                       <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
@@ -228,7 +232,11 @@ export default function Transactions(props) {
                       ${expense.total_expense.toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
-                      {expense.notes}
+                      <EditTransaction
+                        table="expense"
+                        expense={expense}
+                        stores={stores}
+                      />
                     </td>
                   </tr>
                 ))
@@ -249,7 +257,7 @@ export default function Transactions(props) {
                   ${(totalExpensesAfterTax - totalexpenses).toFixed(2)}
                 </td>
                 <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                  ${(totalExpensesAfterTax).toFixed(2)}
+                  ${totalExpensesAfterTax.toFixed(2)}
                 </td>
               </tr>
             </tfoot>

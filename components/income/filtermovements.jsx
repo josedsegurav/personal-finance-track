@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import EditTransaction from "../editTransaction";
 
 export default function FiltersAndMovements(props) {
   const {
@@ -155,6 +156,9 @@ export default function FiltersAndMovements(props) {
                 <th className="text-left py-4 px-6 text-paynes-gray font-medium">
                   Net Income
                 </th>
+                <th className="text-left py-4 px-6 text-paynes-gray font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -197,6 +201,9 @@ export default function FiltersAndMovements(props) {
                     </td>
                     <td className="py-4 px-6 text-right text-paynes-gray">
                       ${parseFloat(income.net_income)}
+                    </td>
+                    <td className="py-4 px-6 text-right font-medium text-bittersweet">
+                      <EditTransaction table="income" income={income} />
                     </td>
                   </tr>
                 ))

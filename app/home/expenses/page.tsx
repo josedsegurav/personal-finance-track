@@ -26,7 +26,6 @@ export default async function expenses() {
     total_expense
 `);
 
-console.log("expenses", expenses);
 
   const { data: stores } = await supabase.from("stores").select();
 

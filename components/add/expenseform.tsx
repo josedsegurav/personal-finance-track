@@ -1,7 +1,6 @@
 "use client";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useMemo } from "react";
-import { redirect } from "next/navigation";
 import StoresEdit from "@/components/add/storesEdit";
 import CategoryEdit from "@/components/add/categoriesEdit";
 import {
@@ -115,9 +114,6 @@ export default function ExpenseForm({
   const isExpenseComplete = useMemo(() => {
     return purchasesArray.length == 0;
   }, [purchasesArray]);
-
-  console.log("purchasesArray", purchasesArray);
-  console.log("formExpenseData", formExpenseData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

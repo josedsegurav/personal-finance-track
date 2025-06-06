@@ -65,7 +65,7 @@ export default function IncomeForm() {
       alert(
         "Income added successfully!"
       );
-      redirect("/income");
+      redirect("/home/income");
     } catch (err) {
       console.error("Error submitting form:", err);
       alert("Failed to add income");
