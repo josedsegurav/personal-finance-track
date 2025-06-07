@@ -2,7 +2,6 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { useState } from "react";
-import { redirect } from "next/navigation";
 
 interface FormData {
   description: string;
@@ -65,7 +64,6 @@ export default function IncomeForm() {
       alert(
         "Income added successfully!"
       );
-      redirect("/home/income");
     } catch (err) {
       console.error("Error submitting form:", err);
       alert("Failed to add income");
