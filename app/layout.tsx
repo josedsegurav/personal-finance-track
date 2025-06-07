@@ -1,6 +1,6 @@
-
+import Head from 'next/head'
 import { Geist } from "next/font/google";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers"
 import "./globals.css";
 
@@ -28,6 +28,9 @@ export default async function RootLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "false"
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
       <body className="bg-ghost-white text-foreground">
         <SidebarProvider defaultOpen={defaultOpen}>
 

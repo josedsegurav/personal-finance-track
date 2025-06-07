@@ -3,6 +3,7 @@
 import { useState } from "react";
 import EditTransaction from "../editTransaction";
 import PurchasesDialog from "./purchasesDialog";
+import Chart from "@/components/expenses/chart";
 
 export default function Transactions(props) {
   const {
@@ -11,18 +12,9 @@ export default function Transactions(props) {
     stores,
     currentMonthexpenses,
     currentMonthExpensesAfterTax,
-    currentMonthTaxes,
+    monthexpenses,
+    currentMonth,
   } = props;
-  const monthexpenses = expenses
-    .filter(
-      (expense) =>
-        new Date(expense.expense_date).getFullYear() ==
-        currentDate.getFullYear()
-    )
-    .filter(
-      (expense) =>
-        new Date(expense.expense_date).getUTCMonth() === currentDate.getMonth()
-    );
 
   const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);
   const [emptyFilter, setEmptyFilter] = useState(false);
@@ -104,166 +96,169 @@ export default function Transactions(props) {
 
   return (
     <>
-      {/* Filters and Transactions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex flex-wrap items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-paynes-gray">
-            Expense Transactions
-          </h2>
+  {/* Mobile-first Chart */}
+  <Chart
+    filters={filters}
+    expenses={filteredexpenses ?? []}
+    months={months}
+  />
 
-          <div className="flex space-x-4 mt-4 sm:mt-0">
-            <div>
-              <select
-                name="month"
-                defaultValue={currentDate.getMonth()}
-                onChange={handleFilter}
-                className="py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-              >
-                <option value="all">All Months</option>
-                {months.map((month, index) => (
-                  <option key={index} value={index}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-            </div>
+  {/* Mobile-optimized Filters and Transactions */}
+  <div className="bg-white rounded-lg shadow-sm p-4 lg:p-6">
+    <div className="mb-4 lg:mb-6">
+      <h2 className="text-lg font-semibold text-paynes-gray mb-4">
+        Expense Transactions
+      </h2>
 
-            <div>
-              <select
-                name="year"
-                onChange={handleFilter}
-                defaultValue={currentDate.getFullYear()}
-                className="py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-              >
-                <option value="all">All Years</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-              </select>
-            </div>
-
-            <div>
-              <select
-                name="store"
-                onChange={handleFilter}
-                defaultValue="all"
-                className="py-2 px-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-columbia-blue"
-              >
-                <option value="all">All Stores</option>
-                {stores?.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.store_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+      {/* Mobile-first Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="flex-1 min-w-0">
+          <label className="block text-xs font-medium text-paynes-gray mb-1 lg:hidden">
+            Month
+          </label>
+          <select
+            name="month"
+            defaultValue={currentDate.getMonth()}
+            onChange={handleFilter}
+            className="w-full py-2.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-columbia-blue bg-white"
+          >
+            <option value="all">All Months</option>
+            {months.map((month, index) => (
+              <option key={index} value={index}>
+                {month}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* expenses Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-columbia-blue bg-opacity-30">
-              <tr>
-                <th className="text-left py-4 px-6 text-paynes-gray font-medium">
-                  Date
-                </th>
-                <th className="text-left py-4 px-6 text-paynes-gray font-medium">
-                  Description
-                </th>
-                <th className="text-left py-4 px-6 text-paynes-gray font-medium">
-                  Payment Method
-                </th>
-                <th className="text-left py-4 px-6 text-paynes-gray font-medium">
-                  Store
-                </th>
-                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
-                  Amount
-                </th>
-                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
-                  Tax
-                </th>
-                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
-                  Total
-                </th>
-                <th className="text-right py-4 px-6 text-paynes-gray font-medium">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {emptyFilter ? (
-                <tr className="border-b border-gray-100">
-                  <td
-                    colSpan="5"
-                    className="py-8 px-6 text-center text-paynes-gray font-medium"
-                  >
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <span>Sorry, no results found</span>
-                      <span className="text-sm opacity-70">
-                        Try adjusting your filters
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredexpenses.map((expense) => (
-                  <tr key={expense.id} className="border-b border-gray-100">
-                    <td className="py-4 px-6 text-paynes-gray">
-                      {expense.expense_date}
-                    </td>
-                    <td className="py-4 px-6 text-paynes-gray">
-                      <PurchasesDialog expense={expense}/>
-                    </td>
-                    <td className="py-4 px-6 text-paynes-gray">
-                      {expense.payment_method}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-3 py-1 text-xs font-medium">
-                        {expense.stores.store_name}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right text-paynes-gray">
-                      ${expense.amount}
-                    </td>
-                    <td className="py-4 px-6 text-right text-paynes-gray">
-                      ${(expense.total_expense - expense.amount).toFixed(2)}
-                    </td>
-                    <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                      ${expense.total_expense.toFixed(2)}
-                    </td>
-                    <td className="py-4 px-6 text-right text-paynes-gray">
-                      <EditTransaction
-                        table="expense"
-                        expense={expense}
-                        stores={stores}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-            <tfoot className="bg-gray-50">
-              <tr>
-                <td
-                  colSpan={4}
-                  className="py-4 px-6 font-medium text-paynes-gray"
-                >
-                  Total
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-paynes-gray">
-                  ${totalexpenses.toFixed(2)}
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-paynes-gray">
-                  ${(totalExpensesAfterTax - totalexpenses).toFixed(2)}
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-bittersweet">
-                  ${totalExpensesAfterTax.toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+        <div className="flex-1 min-w-0">
+          <label className="block text-xs font-medium text-paynes-gray mb-1 lg:hidden">
+            Year
+          </label>
+          <select
+            name="year"
+            onChange={handleFilter}
+            defaultValue={currentDate.getFullYear()}
+            className="w-full py-2.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-columbia-blue bg-white"
+          >
+            <option value="all">All Years</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <label className="block text-xs font-medium text-paynes-gray mb-1 lg:hidden">
+            Store
+          </label>
+          <select
+            name="store"
+            onChange={handleFilter}
+            defaultValue="all"
+            className="w-full py-2.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-columbia-blue bg-white"
+          >
+            <option value="all">All Stores</option>
+            {stores?.map((store) => (
+              <option key={store.id} value={store.id}>
+                {store.store_name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
-    </>
+    </div>
+
+    {/* Unified Card Grid Display */}
+    <div>
+      {emptyFilter ? (
+        <div className="py-12 text-center">
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <span className="text-paynes-gray font-medium">No results found</span>
+            <span className="text-sm text-paynes-gray opacity-70">
+              Try adjusting your filters
+            </span>
+          </div>
+        </div>
+      ) : (
+        <>
+        {/* Summary Card */}
+          <div className="bg-columbia-blue bg-opacity-10 p-4 lg:p-6 rounded-lg mb-4">
+            <div className="flex flex-row justify-between gap-3">
+              <h3 className="text-lg font-semibold text-paynes-gray">Total Summary</h3>
+              <div className="flex justify-between gap-6 text-center sm:text-right">
+                <div>
+                  <div className="text-sm text-paynes-gray mb-1">Amount</div>
+                  <div className="font-semibold text-paynes-gray">
+                    ${totalexpenses.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-paynes-gray mb-1">Tax</div>
+                  <div className="font-semibold text-paynes-gray">
+                    ${(totalExpensesAfterTax - totalexpenses).toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-paynes-gray mb-1">Total</div>
+                  <div className="text-lg font-bold text-bittersweet">
+                    ${totalExpensesAfterTax.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Responsive Card Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+            {filteredexpenses.map((expense) => (
+              <div key={expense.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="bg-bittersweet bg-opacity-10 text-bittersweet rounded-full px-2 py-1 text-xs font-medium">
+                        {expense.stores.store_name}
+                      </span>
+                      <span className="text-xs text-paynes-gray">
+                        {expense.expense_date}
+                      </span>
+                    </div>
+                    <div className="mb-2">
+                      <PurchasesDialog expense={expense} />
+                    </div>
+                    <div className="text-xs text-paynes-gray">
+                      {expense.payment_method}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <div className="text-lg font-semibold text-bittersweet mb-1">
+                      ${expense.total_expense.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-paynes-gray space-y-0.5">
+                      <div>Amount: ${expense.amount}</div>
+                      <div>Tax: ${(expense.total_expense - expense.amount).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2 border-t border-gray-200">
+                  <EditTransaction
+                    table="expense"
+                    expense={expense}
+                    stores={stores}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+
+        </>
+      )}
+    </div>
+  </div>
+</>
   );
 }

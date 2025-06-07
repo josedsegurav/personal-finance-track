@@ -116,9 +116,7 @@ export default function Page() {
     <>
     <Sidebar activeMenu="add" />
 
-    <div className="flex min-h-screen bg-ghost-white">
-      {/* Sidebar - Same as your existing sidebar */}
-<SidebarTrigger />
+
 
       {/* Main Content */}
       <div className="flex-1 p-8">
@@ -151,7 +149,7 @@ export default function Page() {
         {/* Purchases form */}
         {activeTab === "expense" && <ExpenseForm categories={categories} stores={stores} />}
       </div>
-    </div>
+
     </>
   );
 }

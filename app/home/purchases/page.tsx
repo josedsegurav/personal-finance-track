@@ -83,9 +83,7 @@ export default async function Purchases() {
     <>
     <Sidebar activeMenu="purchases" />
 
-      <div className="flex min-h-screen bg-ghost-white">
-        {/* Sidebar would be here in a full layout */}
-<SidebarTrigger />
+
 
         {/* Main Content */}
         <div className="flex-1 p-8">
@@ -121,19 +119,6 @@ export default async function Purchases() {
 
           </div>
 
-          {/* Chart Section */}
-          <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-            <h2 className="text-lg font-semibold text-paynes-gray mb-4">
-              purchase Categories
-            </h2>
-            <div className="h-64 flex items-center justify-center">
-              <div className="text-center text-gray-400">
-                <p>purchase Breakdown by Category</p>
-                <p className="text-sm">(Pie chart will be shown here)</p>
-              </div>
-            </div>
-          </div>
-
           {/* Filters and Transactions */}
 
           <FiltersAndTransactions
@@ -145,7 +130,7 @@ export default async function Purchases() {
             currentMonthTaxes={totalTaxes}
           />
         </div>
-      </div>
+
     </>
   );
 }

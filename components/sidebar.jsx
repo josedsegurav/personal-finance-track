@@ -50,7 +50,7 @@ export default function SidebarNav(props) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className="w-8 h-8 mr-3 flex items-center justify-center rounded-md group-hover:bg-columbia-blue transition-colors"
+
                     style={
                       activeLink === "dashboard"
                         ? { backgroundColor: "#BDD5EA" }
