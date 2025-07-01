@@ -63,7 +63,7 @@ export default function EditExpense(props: any) {
 
       if (error) throw error;
 
-      console.log(`Updated:`, data);
+
       alert(`Expense updated successfully!`);
       location.reload();
     } catch (err) {
@@ -82,7 +82,7 @@ export default function EditExpense(props: any) {
 
       if (error) throw error;
 
-      console.log(`deleted:`, data);
+
       alert(`Expense deleted successfully!`);
       location.reload();
     } catch (err) {
@@ -122,12 +122,12 @@ export default function EditExpense(props: any) {
           placeholder="Enter description"
           onChange={handleChange}
         />
-        <Label htmlFor="paymentmethod" className="col-span-2">
+        <Label htmlFor="payment_method" className="col-span-2">
           Payment Method
         </Label>
         <select
-          id="paymentmethod"
-          name="paymentmethod"
+          id="payment_method"
+          name="payment_method"
           defaultValue={props.expense.payment_method}
           onChange={handleChange}
           className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
@@ -140,12 +140,12 @@ export default function EditExpense(props: any) {
           <option value="cash">Cash</option>
           <option value="bank transfer">Bank Transfer</option>
         </select>
-        <Label htmlFor="storeEdit" className="col-span-2">
+        <Label htmlFor="store" className="col-span-2">
           Store
         </Label>
         <select
-          id="storeEdit"
-          name="storeEdit"
+          id="store"
+          name="store"
           defaultValue={props.expense.stores.id}
           onChange={handleChange}
           className="col-span-2 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"

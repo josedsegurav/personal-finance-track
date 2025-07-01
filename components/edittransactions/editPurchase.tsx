@@ -44,7 +44,7 @@ export default function EditExpense(props: any) {
     }));
   };
 
-  console.log("formPurchaseData", formPurchaseData);
+
 
   const handleEdit = async () => {
     try {
@@ -64,7 +64,7 @@ export default function EditExpense(props: any) {
 
       if (error) throw error;
 
-      console.log(`Updated:`, data);
+
       alert(`Purchase updated successfully!`);
       location.reload();
     } catch (err) {
@@ -83,7 +83,7 @@ export default function EditExpense(props: any) {
 
       if (error) throw error;
 
-      console.log(`deleted:`, data);
+
       alert(`Purchase deleted successfully!`);
       location.reload();
     } catch (err) {
@@ -133,12 +133,12 @@ export default function EditExpense(props: any) {
             ))}
         </select>
 
-        <Label className="col-span-1" htmlFor="amount">
+        <Label className="col-span-1" htmlFor="purchaseAmount">
           Amount
         </Label>
         <Input
-          id="amount"
-          name="amount"
+          id="purchaseAmount"
+          name="purchaseAmount"
           type="number"
           className="col-span-3"
           defaultValue={props.purchase.amount}
