@@ -44,7 +44,6 @@ export default function EditIncome(props: any) {
     }));
   };
 
-  console.log(formData);
 
   const handleEdit = async () => {
     try {
@@ -63,7 +62,7 @@ export default function EditIncome(props: any) {
 
       if (error) throw error;
 
-      console.log(`Updated:`, data);
+
       alert(`Income updated successfully!`);
       location.reload();
     } catch (err) {
@@ -82,7 +81,7 @@ export default function EditIncome(props: any) {
 
       if (error) throw error;
 
-      console.log(`deleted:`, data);
+
       alert(`Income deleted successfully!`);
       location.reload();
     } catch (err) {

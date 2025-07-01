@@ -35,8 +35,6 @@ export default async function Purchases() {
   const { data: categories } = await supabase.from("categories").select();
   const { data: stores } = await supabase.from("stores").select();
 
-  console.log("purchases", purchases);
-  console.log("categories", categories);
   const currentDate = new Date();
   const currentMonth = new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -76,8 +74,6 @@ export default async function Purchases() {
         )
     : 0;
 
-  console.log("totalPurchases", totalPurchases);
-  console.log("totalTaxes", totalTaxes);
 
   return (
     <>

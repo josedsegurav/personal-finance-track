@@ -109,7 +109,7 @@ export default function FiltersAndTransactions(props) {
     }
   };
 
-  console.log("Filtered Purchases:", filteredPurchases);
+
 
   return (
     <>

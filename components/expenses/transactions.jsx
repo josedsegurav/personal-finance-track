@@ -92,7 +92,7 @@ export default function Transactions(props) {
     }
   };
 
-  console.log("Filtered Expenses: ", filteredexpenses);
+
 
   return (
     <>
