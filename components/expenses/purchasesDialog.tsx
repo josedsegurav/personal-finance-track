@@ -191,10 +191,10 @@ export default function PurchasesDialog(props: any) {
         ) : (
           <p>No purchases found for this expense.</p>
         )}
-        <DialogClose>
-          <button className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50">
+        <DialogClose className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50">
+
             Close
-          </button>
+
         </DialogClose>
       </DialogContent>
     </Dialog>

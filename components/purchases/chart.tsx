@@ -24,8 +24,24 @@ import {
 export default function Chart(props: any) {
   const { filters, purchases, months } = props;
   const [data, setData] = useState<any[]>([]);
-
   const [ChartConfig, setChartConfig] = useState<ChartConfig>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    // Set initial value
+    checkScreenSize();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
 
   useEffect(() => {
     interface GroupedData {
@@ -83,8 +99,6 @@ export default function Chart(props: any) {
     } satisfies ChartConfig);
   }, [purchases]);
 
-  console.log("ChartConfig", ChartConfig);
-  console.log("data", data);
 
   return (
     <div className="mb-6 lg:mb-8">
@@ -117,9 +131,9 @@ export default function Chart(props: any) {
             tickMargin={10}
             axisLine={false}
             fontSize={12}
-            angle={window.innerWidth < 640 ? -45 : 0}
-            textAnchor={window.innerWidth < 640 ? "end" : "middle"}
-            height={window.innerWidth < 640 ? 80 : 60}
+            angle={isMobile ? -45 : 0}
+            textAnchor={isMobile ? "end" : "middle"}
+            height={isMobile ? 80 : 60}
           />
           <ChartTooltip
             cursor={false}

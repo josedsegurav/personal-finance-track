@@ -28,11 +28,28 @@ import { Description } from "@radix-ui/react-dialog";
 export default function Chart(props: any) {
   const { filters, income, months } = props;
   const [data, setData] = useState<any[]>([]);
-  console.log(income)
   const [ChartConfig, setChartConfig] = useState<ChartConfig>({});
+  const [isMobile, setIsMobile] = useState(false);
+
+
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    // Set initial value
+    checkScreenSize();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   useEffect(() => {
-
     const chartData = income.map((item: any, index: any) => ({
       description: item.description,
       net_income: item.net_income,
@@ -78,9 +95,9 @@ export default function Chart(props: any) {
                 tickMargin={10}
                 axisLine={false}
                 fontSize={12}
-                angle={window.innerWidth < 640 ? -45 : 0}
-                textAnchor={window.innerWidth < 640 ? "end" : "middle"}
-                height={window.innerWidth < 640 ? 80 : 60}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 80 : 60}
               />
               <ChartTooltip
                 cursor={false}
