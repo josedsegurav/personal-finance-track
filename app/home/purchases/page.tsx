@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import FiltersAndTransactions from "../../../components/purchases/filterstransactions";
 import Sidebar from "@/components/sidebar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import ChatBot from "@/components/chatbot/chatBot";
 
 export default async function Purchases() {
   const supabase = await createClient();
@@ -74,59 +74,55 @@ export default async function Purchases() {
         )
     : 0;
 
-
   return (
     <>
-    <Sidebar activeMenu="purchases" />
+      <Sidebar activeMenu="purchases" />
 
+      {/* Main Content */}
+      <div className="flex-1 p-8">
+        <h1 className="text-2xl font-semibold text-paynes-gray mb-6">
+          Purchases
+        </h1>
 
-
-        {/* Main Content */}
-        <div className="flex-1 p-8">
-          <h1 className="text-2xl font-semibold text-paynes-gray mb-6">
-            Purchases
-          </h1>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
-                Total Purchases
-              </h3>
-              <p className="text-2xl font-semibold text-bittersweet">
-                ${totalPurchases.toFixed(2)}
-              </p>
-              <p className="text-sm text-paynes-gray mt-2">
-                {currentMonth} {currentDate.getFullYear()}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
-                Total Taxes
-              </h3>
-              <p className="text-2xl font-semibold text-paynes-gray">
-                ${(totalTaxes / 100).toFixed(2)}
-              </p>
-              <p className="text-sm text-paynes-gray mt-2">
-                {currentMonth} {currentDate.getFullYear()}
-              </p>
-            </div>
-
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
+              Total Purchases
+            </h3>
+            <p className="text-2xl font-semibold text-bittersweet">
+              ${totalPurchases.toFixed(2)}
+            </p>
+            <p className="text-sm text-paynes-gray mt-2">
+              {currentMonth} {currentDate.getFullYear()}
+            </p>
           </div>
 
-          {/* Filters and Transactions */}
-
-          <FiltersAndTransactions
-            currentDate={currentDate}
-            categories={categories}
-            purchases={purchases}
-            stores={stores}
-            currentMonthPurchases={totalPurchases}
-            currentMonthTaxes={totalTaxes}
-          />
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h3 className="text-sm font-medium text-paynes-gray opacity-80 mb-2">
+              Total Taxes
+            </h3>
+            <p className="text-2xl font-semibold text-paynes-gray">
+              ${(totalTaxes / 100).toFixed(2)}
+            </p>
+            <p className="text-sm text-paynes-gray mt-2">
+              {currentMonth} {currentDate.getFullYear()}
+            </p>
+          </div>
         </div>
 
+        {/* Filters and Transactions */}
+
+        <FiltersAndTransactions
+          currentDate={currentDate}
+          categories={categories}
+          purchases={purchases}
+          stores={stores}
+          currentMonthPurchases={totalPurchases}
+          currentMonthTaxes={totalTaxes}
+        />
+      </div>
+      <ChatBot data={purchases} />
     </>
   );
 }
