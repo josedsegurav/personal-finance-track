@@ -2,7 +2,7 @@
 import { createClient } from '@/utils/supabase/server'
 import FiltersAndMovements from "../../../components/income/filtermovements"
 import SidebarNav from '@/components/sidebar';
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import ChatBot from "@/components/chatbot/chatBot";
 import { redirect } from "next/navigation";
 
 export default async function Purchases() {
@@ -106,7 +106,7 @@ export default async function Purchases() {
           />
 
         </div>
-
+<ChatBot data={income} />
     </>
   );
 }

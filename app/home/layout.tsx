@@ -1,4 +1,6 @@
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
+
 
 export default async function Layout({
   children,
@@ -14,6 +16,7 @@ export default async function Layout({
       <SidebarTrigger className="bg-white shadow-lg rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" />
     </div>
         {children}
+
       </div>
       </div>
     </>

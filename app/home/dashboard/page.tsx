@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import Transactions from "../../../components/dashboard/transactions";
 import SidebarNav from "@/components/sidebar";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import ChatBot from "@/components/chatbot/chatBot";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -171,6 +171,7 @@ export default async function Page() {
     />
   </div>
 </div>
+<ChatBot data={[income, expenses]}/>
     </>
   );
 }
