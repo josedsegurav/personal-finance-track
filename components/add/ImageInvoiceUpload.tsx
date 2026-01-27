@@ -206,6 +206,8 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                         <Image
                             src={preview}
                             alt="Invoice preview"
+                            width={150}
+                            height={200}
                             className="max-h-64 mx-auto rounded-lg shadow-lg"
                         />
                         <button

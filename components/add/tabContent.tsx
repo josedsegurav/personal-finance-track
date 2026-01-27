@@ -51,7 +51,7 @@ export default function TabContent({ categoriesData, storesData }: TabContentPro
                 {/* Income Form  */}
                 {activeTab === "income" && <IncomeForm />}
                 {/* Purchases form */}
-                {activeTab === "expense" && <ExpenseForm categories={categories} stores={stores} />}
+                {activeTab === "expense" && <ExpenseForm categories={categories || []} stores={stores || []} />}
             </Suspense>
         </div>
 
