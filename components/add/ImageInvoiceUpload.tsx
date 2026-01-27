@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Upload, Loader2, X, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 interface ExtractedData {
     expense: {
@@ -202,7 +203,7 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                         >
                             <X className="h-4 w-4" />
                         </button>
-                        <img
+                        <Image
                             src={preview}
                             alt="Invoice preview"
                             className="max-h-64 mx-auto rounded-lg shadow-lg"

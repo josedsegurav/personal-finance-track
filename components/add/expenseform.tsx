@@ -19,6 +19,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import ImageInvoiceUpload from "@/components/add/ImageInvoiceUpload";
+import { Category, Store } from "@/app/types";
 
 
 
@@ -39,12 +40,18 @@ interface FormPurchaseData {
   notes: string;
 }
 
+
+export interface ExtractedData {
+  expense: FormExpenseData;
+  purchases: Array<FormPurchaseData>;
+}
+
 export default function ExpenseForm({
   stores,
   categories,
 }: {
-  stores: any;
-  categories: any;
+  stores: Array<Store>;
+  categories: Array<Category>;
 }) {
   const supabase = createClient();
   const purchaseButtonRef = useRef<HTMLButtonElement>(null);
@@ -110,12 +117,12 @@ console.log(formExpenseData)
   }, [formPurchaseData]);
 
 
-  const handleAIDataExtraction = (extractedData: any) => {
+  const handleAIDataExtraction = (extractedData: ExtractedData) => {
 
   console.log(extractedData)
     // Find store ID by name
     const matchedStore = stores?.find(
-      (store: any) =>
+      (store) =>
         store.store_name.toLowerCase().includes(extractedData.expense.store.toLowerCase()) ||
         extractedData.expense.store.toLowerCase().includes(store.store_name.toLowerCase())
     );
@@ -131,10 +138,10 @@ console.log(formExpenseData)
     });
 
     // Update purchases array
-    const mappedPurchases = extractedData.purchases.map((purchase: any) => {
+    const mappedPurchases = extractedData.purchases.map((purchase) => {
       // Find category ID by name
       const matchedCategory = categories?.find(
-        (cat: any) =>
+        (cat) =>
           cat.category_name.toLowerCase().includes(purchase.category.toLowerCase()) ||
           purchase.category.toLowerCase().includes(cat.category_name.toLowerCase())
       );
@@ -348,7 +355,7 @@ console.log(formExpenseData)
             >
               <option value="">Select a store</option>
               {stores &&
-                stores.map((store: any) => (
+                stores.map((store) => (
                   <option key={store.id} value={store.id}>
                     {store.store_name}
                   </option>
@@ -468,7 +475,7 @@ console.log(formExpenseData)
                           >
                             <option disabled value="">Select a category</option>
                             {categories &&
-                              categories.map((category: any) => (
+                              categories.map((category) => (
                                 <option key={category.id} value={category.id}>
                                   {category.category_name}
                                 </option>
@@ -587,7 +594,7 @@ console.log(formExpenseData)
                     >
                       <option disabled value="">Select a category</option>
                       {categories &&
-                        categories.map((category: any) => (
+                        categories.map((category) => (
                           <option key={category.id} value={category.id}>
                             {category.category_name}
                           </option>

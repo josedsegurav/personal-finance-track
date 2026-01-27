@@ -14,22 +14,25 @@ import {
 import { Collapsible } from "@radix-ui/react-collapsible";
 import { CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import {
-  ChevronDown,
-  ChevronRight,
   DollarSign,
   Tag,
   FileText,
   Calculator,
 } from "lucide-react";
+import { Expense, PurchaseDialog } from "@/app/types";
 
-export default function PurchasesDialog(props: any) {
+interface PurchasesDialogProps {
+  expense: Expense;
+}
+
+export default function PurchasesDialog(props: PurchasesDialogProps) {
   const supabase = createClient();
   const [loading, setLoading] = useState({
     purchases: true,
   });
   const [error, setError] = useState<string | null>(null);
 
-  const [purchases, setPurchases] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseDialog[]>([]);
 
   useEffect(() => {
     const fetchPurchases = async () => {
@@ -50,7 +53,7 @@ export default function PurchasesDialog(props: any) {
 
         if (error) throw error;
 
-        setPurchases(purchases);
+        setPurchases(purchases as unknown as PurchaseDialog[]);
       } catch (err) {
         console.error("Error fetching categories:", err);
         setError("Failed to load categories");
@@ -96,7 +99,7 @@ export default function PurchasesDialog(props: any) {
           </DialogDescription>
         </DialogHeader>
         {purchases ? (
-          purchases.map((purchase: any) => (
+          purchases.map((purchase) => (
             <Collapsible
               key={purchase.id}
               className="border border-gray-200 rounded-lg mb-3 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"

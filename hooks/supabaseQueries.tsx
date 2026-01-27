@@ -52,3 +52,52 @@ export async function getExpense(supabase: Awaited<ReturnType<typeof createClien
 
     return data;
 }
+
+export async function getExpenseDetailed(supabase: Awaited<ReturnType<typeof createClient>>) {
+    const { data, error } = await supabase.from("expenses").select(`
+        id,
+        created_at,
+        amount,
+        description,
+        stores (id, store_name),
+        payment_method,
+        expense_date,
+        user_id,
+        total_expense
+    `);
+
+    if (error) {
+        throw new Error(`Failed to fetch expense: ${error.message}`);
+    }
+
+    return data;
+}
+
+export async function getPurchases(supabase: Awaited<ReturnType<typeof createClient>>) {
+
+    const { data, error } = await supabase.from("purchases").select(`
+    id,
+    created_at,
+    item,
+    categories (id, category_name),
+    amount,
+    taxes,
+    notes,
+    user_id,
+    expenses (
+      id,
+      expense_date,
+      stores (
+        id,
+        store_name
+      )
+    )
+  `);
+
+    if (error) {
+        throw new Error(`Failed to fetch purchases: ${error.message}`);
+    }
+
+    return data;
+
+}

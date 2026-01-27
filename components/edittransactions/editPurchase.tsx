@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { Category, PurchaseDetailed, Store } from "@/app/types";
 
 interface FormPurchaseData {
   category: string;
@@ -20,7 +21,13 @@ interface FormPurchaseData {
   notes: string;
 }
 
-export default function EditExpense(props: any) {
+interface EditPurchaseProps {
+  purchase: PurchaseDetailed;
+  categories: Category[];
+  stores: Store[];
+}
+
+export default function EditExpense(props: EditPurchaseProps) {
   const supabase = createClient();
   const [formPurchaseData, setFormPurchaseData] = useState<FormPurchaseData>({
     category: props.purchase.categories.id.toString(),
@@ -48,7 +55,7 @@ export default function EditExpense(props: any) {
 
   const handleEdit = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("purchases")
         .update([
           {
@@ -75,7 +82,7 @@ export default function EditExpense(props: any) {
 
   const handleDelete = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("purchases")
         .delete()
         .eq("id", props.purchase.id)
@@ -126,7 +133,7 @@ export default function EditExpense(props: any) {
         >
           <option value="">Select a category</option>
           {props.categories &&
-            props.categories.map((category: any) => (
+            props.categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.category_name}
               </option>

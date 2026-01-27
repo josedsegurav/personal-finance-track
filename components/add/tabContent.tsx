@@ -1,7 +1,7 @@
 "use client";
 import IncomeForm from "@/components/add/incomeform";
 import ExpenseForm from "@/components/add/expenseform";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { Category, Store } from "@/app/types"
 
 type TabContentProps = {

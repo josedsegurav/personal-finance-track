@@ -5,8 +5,18 @@ import { Pencil } from "lucide-react";
 import EditIncome from "./edittransactions/editIncome";
 import EditExpense from "./edittransactions/editExpense";
 import EditPurchase from "./edittransactions/editPurchase";
+import { Category, ExpenseDetailed, Income, PurchaseDetailed, Store } from "@/app/types";
 
-export default function EditTransaction(props: any) {
+interface EditTransactionProps {
+  table: string;
+  income: Income;
+  expense: ExpenseDetailed;
+  stores: Array<Store>;
+  categories: Array<Category>;
+  purchase: PurchaseDetailed;
+}
+
+export default function EditTransaction(props: EditTransactionProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>

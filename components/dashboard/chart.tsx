@@ -1,7 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ChartConfig,
   ChartContainer,
@@ -16,9 +16,20 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-export default function Chart(props: any) {
+interface ChartProps {
+  totalExpenses: number;
+  totalNetIncome: number;
+}
+
+interface Data {
+  description: string;
+  total: number;
+  fill: string;
+}
+
+export default function Chart(props: ChartProps) {
   const { totalExpenses, totalNetIncome } = props;
-  const [data, setData] = useState<any[]>([
+  const [data] = useState<Data[]>([
     {
       description: "Total Net Income",
       total: totalNetIncome,
@@ -31,7 +42,7 @@ export default function Chart(props: any) {
     },
   ]);
 
-  const [ChartConfig, setChartConfig] = useState<ChartConfig>({
+  const [ChartConfig] = useState<ChartConfig>({
     total: {
       label: "Total",
     },

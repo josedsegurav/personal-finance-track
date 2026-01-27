@@ -3,7 +3,7 @@ import ChatClientComponent from "./chatClientComponent";
 
 interface ChatBotProps {
   account?: boolean;
-  data: Object | null;
+  data: object | null;
 }
 
 const apiKey = process.env.GEMINI_API_KEY;

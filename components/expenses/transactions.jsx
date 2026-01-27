@@ -13,7 +13,6 @@ export default function Transactions(props) {
     currentMonthexpenses,
     currentMonthExpensesAfterTax,
     monthexpenses,
-    currentMonth,
   } = props;
 
   const [filteredexpenses, setFilteredexpenses] = useState(monthexpenses);

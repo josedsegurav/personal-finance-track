@@ -3,12 +3,20 @@
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import CategoryEdit from "@/components/add/categoriesEdit";
+import { Category } from "@/app/types";
 
 
-// Type definitions
-interface Category {
-  id: number;
-  category_name: string;
+interface ExpenseData {
+  description: string;
+  store: string;
+  amount: string;
+  total_expense: string;
+  payment_method: string;
+  date: string;
+}
+
+interface AddPurchasesProps {
+  expenseData: ExpenseData;
 }
 
 interface FormData {
@@ -19,7 +27,7 @@ interface FormData {
   notes: string;
 }
 
-export default function AddPurchases({ expenseData }: any) {
+export default function AddPurchases({ expenseData }: AddPurchasesProps) {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [loading, setLoading] = useState({
     categories: true,

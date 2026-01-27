@@ -1,21 +1,16 @@
 import { createClient } from "@/utils/supabase/server";
 import Transactions from "../../../components/dashboard/transactions";
 import SidebarNav from "@/components/sidebar";
-import { redirect } from "next/navigation";
 import ChatBot from "@/components/chatbot/chatBot";
-import { getExpense, getIncome } from "@/hooks/supabaseQueries";
+import { getExpense, getIncome, getUser } from "@/hooks/supabaseQueries";
 
 export default async function Page() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect("/sign-in");
-  }
+  const user = await getUser(supabase)
 
   let demoAccount = false;
+
   if (user.email == "lacimaonline@gmail.com") {
     demoAccount = true;
   }
@@ -26,10 +21,10 @@ export default async function Page() {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
 
-  function totalMonthlyNetIncome(month: any) {
+  function totalMonthlyNetIncome(month: number) {
     return income
       ? income.reduce(
-        (sum: any, eachIncome: any) =>
+        (sum, eachIncome) =>
           new Date(eachIncome.income_date).getMonth() === month
             ? sum + parseFloat(eachIncome.net_income)
             : sum,
@@ -38,10 +33,10 @@ export default async function Page() {
       : 0;
   }
 
-  function totalMonthlyExpenses(month: any) {
+  function totalMonthlyExpenses(month: number) {
     return expenses
       ? expenses.reduce(
-        (sum: any, expense: any) =>
+        (sum, expense) =>
           new Date(expense.expense_date).getMonth() === month
             ? sum + parseFloat(expense.total_expense)
             : sum,

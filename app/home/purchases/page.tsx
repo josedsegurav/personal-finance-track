@@ -1,44 +1,23 @@
 import { createClient } from "@/utils/supabase/server";
 import FiltersAndTransactions from "../../../components/purchases/filterstransactions";
 import Sidebar from "@/components/sidebar";
-import { redirect } from "next/navigation";
 import ChatBot from "@/components/chatbot/chatBot";
+import { getCategories, getPurchases, getStores, getUser } from "@/hooks/supabaseQueries";
+import { ExpenseInPurchase } from "@/app/types";
 
 export default async function Purchases() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect("/sign-in");
-  }
+  const user = await getUser(supabase);
 
   let demoAccount = false;
-  if(user.email == "lacimaonline@gmail.com") {
+  if (user.email == "lacimaonline@gmail.com") {
     demoAccount = true;
   }
 
-  const { data: purchases } = await supabase.from("purchases").select(`
-    id,
-    created_at,
-    item,
-    categories (id, category_name),
-    amount,
-    taxes,
-    notes,
-    user_id,
-    expenses (
-      id,
-      expense_date,
-      stores (
-        id,
-        store_name
-      )
-    )
-  `);
-  const { data: categories } = await supabase.from("categories").select();
-  const { data: stores } = await supabase.from("stores").select();
+  const purchases = await getPurchases(supabase);
+  const categories = await getCategories(supabase);
+  const stores = await getStores(supabase);
 
   const currentDate = new Date();
   const currentMonth = new Intl.DateTimeFormat("en-US", {
@@ -48,35 +27,39 @@ export default async function Purchases() {
   //   // Calculate totals
   const totalPurchases = purchases
     ? purchases
-        .filter(
-          (purchase: any) =>
-            new Date(purchase.expenses.expense_date).getFullYear() ===
-            currentDate.getFullYear()
-        )
-        .filter(
-          (purchase: any) =>
-            new Date(purchase.expenses.expense_date).getUTCMonth() ===
-            currentDate.getUTCMonth()
-        )
-        .reduce((sum: any, purchase: any) => sum + purchase.amount, 0)
+      .filter(
+        (purchase) =>
+          purchase.expenses &&
+          new Date((purchase.expenses as unknown as ExpenseInPurchase).expense_date).getFullYear() ===
+          currentDate.getFullYear()
+      )
+      .filter(
+        (purchase) =>
+          purchase.expenses &&
+          new Date((purchase.expenses as unknown as ExpenseInPurchase).expense_date).getUTCMonth() ===
+          currentDate.getUTCMonth()
+      )
+      .reduce((sum, purchase) => sum + purchase.amount, 0)
     : 0;
 
   const totalTaxes = purchases
     ? purchases
-        .filter(
-          (purchase: any) =>
-            new Date(purchase.expenses.expense_date).getFullYear() ==
-            currentDate.getFullYear()
-        )
-        .filter(
-          (purchase: any) =>
-            new Date(purchase.expenses.expense_date).getUTCMonth() ==
-            currentDate.getMonth()
-        )
-        .reduce(
-          (sum: any, purchase: any) => sum + purchase.amount * purchase.taxes,
-          0
-        )
+      .filter(
+        (purchase) =>
+          purchase.expenses &&
+          new Date((purchase.expenses as unknown as ExpenseInPurchase).expense_date).getFullYear() ==
+          currentDate.getFullYear()
+      )
+      .filter(
+        (purchase) =>
+          purchase.expenses &&
+          new Date((purchase.expenses as unknown as ExpenseInPurchase).expense_date).getUTCMonth() ==
+          currentDate.getMonth()
+      )
+      .reduce(
+        (sum, purchase) => sum + purchase.amount * purchase.taxes,
+        0
+      )
     : 0;
 
   return (

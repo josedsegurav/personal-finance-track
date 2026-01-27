@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useState } from "react";
+import { Income } from "@/app/types";
 
 
 interface FormData {
@@ -20,7 +21,11 @@ interface FormData {
   date: string;
 }
 
-export default function EditIncome(props: any) {
+interface EditIncomeProps {
+  income: Income;
+}
+
+export default function EditIncome(props: EditIncomeProps) {
   const supabase = createClient();
 
   const [formData, setFormData] = useState<FormData>({
@@ -30,7 +35,6 @@ export default function EditIncome(props: any) {
     date: props.income.income_date,
   });
 
-  const [editTable, setEditTable] = useState(props.table);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -47,7 +51,7 @@ export default function EditIncome(props: any) {
 
   const handleEdit = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("income")
         .update([
           {
@@ -73,7 +77,7 @@ export default function EditIncome(props: any) {
 
   const handleDelete = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("income")
         .delete()
         .eq("id", props.income.id)

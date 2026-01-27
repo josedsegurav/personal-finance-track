@@ -127,7 +127,7 @@ export default async function Home() {
               <h3 className="text-xl font-bold text-paynes-gray mb-4">Expense Management</h3>
               <p className="text-paynes-gray opacity-70 mb-4">
                 Categorize and track all your expenses. Set budgets, monitor spending patterns,
-                and get alerts when you're approaching your limits.
+                and get alerts when you`&apos;`re approaching your limits.
               </p>
               <Link href="/sign-in" className="text-columbia-blue font-medium hover:text-opacity-80 transition-colors">
                 Learn more →
