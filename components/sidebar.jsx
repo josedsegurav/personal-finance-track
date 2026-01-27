@@ -37,12 +37,14 @@ export default function SidebarNav(props) {
     <>
       <Sidebar collapsible="offcanvas">
         <SidebarHeader>
-          <h1 className="text-2xl font-bold text-glaucous">
-            <span className="text-bittersweet">Finance</span> Tracker
-          </h1>
-          <p className="text-xs text-paynes-gray opacity-70 mt-1">
-            Track your spending
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold text-glaucous">
+              <span className="text-bittersweet">Finance</span> Tracker
+            </h1>
+            <p className="text-xs text-paynes-gray opacity-70 mt-1">
+              Track your spending
+            </p>
+          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -60,11 +62,11 @@ export default function SidebarNav(props) {
                     <Link
                       href="/home/dashboard"
                       className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      // style={
-                      //   activeLink === "dashboard"
-                      //     ? { backgroundColor: "#F7F7FF" }
-                      //     : {}
-                      // }
+                    // style={
+                    //   activeLink === "dashboard"
+                    //     ? { backgroundColor: "#F7F7FF" }
+                    //     : {}
+                    // }
                     >
                       <span
                         className="w-8 h-8 mr-3 flex items-center justify-center rounded-md group-hover:bg-columbia-blue transition-colors"
@@ -105,17 +107,17 @@ export default function SidebarNav(props) {
                     <Link
                       href="/home/income"
                       className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white font-medium transition-colors group"
-                      // style={
-                      //   activeLink === "income"
-                      //     ? { backgroundColor: "#F7F7FF" }
-                      //     : {}
-                      // }
+                    // style={
+                    //   activeLink === "income"
+                    //     ? { backgroundColor: "#F7F7FF" }
+                    //     : {}
+                    // }
                     >
                       <span className="w-8 h-8 mr-3 flex items-center justify-center rounded-md" style={
-                          activeLink === "income"
-                            ? { backgroundColor: "#BDD5EA" }
-                            : { backgroundColor: "#F7F7FF" }
-                        }>
+                        activeLink === "income"
+                          ? { backgroundColor: "#BDD5EA" }
+                          : { backgroundColor: "#F7F7FF" }
+                      }>
                         <ArrowDownRight
                           size={18}
                           className={
@@ -147,17 +149,17 @@ export default function SidebarNav(props) {
                     <Link
                       href="/home/expenses"
                       className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      // style={
-                      //   activeLink === "expenses"
-                      //     ? { backgroundColor: "#F7F7FF" }
-                      //     : {}
-                      // }
+                    // style={
+                    //   activeLink === "expenses"
+                    //     ? { backgroundColor: "#F7F7FF" }
+                    //     : {}
+                    // }
                     >
                       <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
-                          activeLink === "expenses"
-                            ? { backgroundColor: "#BDD5EA" }
-                            : { backgroundColor: "#F7F7FF" }
-                        }>
+                        activeLink === "expenses"
+                          ? { backgroundColor: "#BDD5EA" }
+                          : { backgroundColor: "#F7F7FF" }
+                      }>
                         <ArrowUpRight
                           size={18}
                           className={
@@ -189,17 +191,17 @@ export default function SidebarNav(props) {
                     <Link
                       href="/home/purchases"
                       className="flex items-center py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      // style={
-                      //   activeLink === "purchases"
-                      //     ? { backgroundColor: "#F7F7FF" }
-                      //     : {}
-                      // }
+                    // style={
+                    //   activeLink === "purchases"
+                    //     ? { backgroundColor: "#F7F7FF" }
+                    //     : {}
+                    // }
                     >
                       <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
-                          activeLink === "purchases"
-                            ? { backgroundColor: "#BDD5EA" }
-                            : { backgroundColor: "#F7F7FF" }
-                        }>
+                        activeLink === "purchases"
+                          ? { backgroundColor: "#BDD5EA" }
+                          : { backgroundColor: "#F7F7FF" }
+                      }>
                         <ShoppingCart
                           size={18}
                           className={
@@ -232,17 +234,17 @@ export default function SidebarNav(props) {
                       href="/home/add"
                       className="flex items-center
                        py-3 rounded-lg text-paynes-gray hover:bg-ghost-white transition-colors group"
-                      // style={
-                      //   activeLink === "add"
-                      //     ? { backgroundColor: "#F7F7FF" }
-                      //     : {}
-                      // }
+                    // style={
+                    //   activeLink === "add"
+                    //     ? { backgroundColor: "#F7F7FF" }
+                    //     : {}
+                    // }
                     >
                       <span className="w-8 h-8 mr-3 flex items-center justify-center bg-ghost-white rounded-md group-hover:bg-columbia-blue transition-colors" style={
-                          activeLink === "add"
-                            ? { backgroundColor: "#BDD5EA" }
-                            : { backgroundColor: "#F7F7FF" }
-                        }>
+                        activeLink === "add"
+                          ? { backgroundColor: "#BDD5EA" }
+                          : { backgroundColor: "#F7F7FF" }
+                      }>
                         <PlusCircle
                           size={18}
                           className={

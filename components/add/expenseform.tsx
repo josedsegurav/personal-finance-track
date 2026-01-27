@@ -94,7 +94,7 @@ export default function ExpenseForm({
       [name]: value,
     }));
   };
-
+console.log(formExpenseData)
   const isExpenseFormComplete = useMemo(() => {
     return Object.values(formExpenseData).every((value) => value.trim() !== "");
   }, [formExpenseData]);
@@ -109,7 +109,10 @@ export default function ExpenseForm({
     );
   }, [formPurchaseData]);
 
+
   const handleAIDataExtraction = (extractedData: any) => {
+
+  console.log(extractedData)
     // Find store ID by name
     const matchedStore = stores?.find(
       (store: any) =>
