@@ -29,6 +29,8 @@ export default function Transactions(props) {
     currentMonthExpensesAfterTax
   );
 
+  console.log(expenses)
+
   const months = [
     "January",
     "February",
@@ -142,6 +144,7 @@ export default function Transactions(props) {
             className="w-full py-2.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-columbia-blue bg-white"
           >
             <option value="all">All Years</option>
+            <option value="2026">2026</option>
             <option value="2025">2025</option>
             <option value="2024">2024</option>
           </select>

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,20 +18,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: `Invalid file type. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit` },
+        { status: 400 }
+      );
+    }
+
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Image = buffer.toString('base64');
 
-    const prompt = `Analyze this invoice/receipt image following this guidelines:
+    const result = await genAI?.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
 
+            {
+              inlineData: {
+                mimeType: file.type,
+                data: base64Image,
+              },
+            },
+          ],
+        }
+      ],
+      config: {
+        systemInstruction: `Analyze this invoice/receipt image following this guidelines:
     Follow these guidelines
 - Extract ALL individual items from the receipt
 - If payment method is unclear, use "credit card"
 - If date is not found, use today's date
 - "amount" should be subtotal before taxes
 - "total_expense" should be the final total
-- Provide notes for every item of max 50 characters
+- Provide notes of 50 characters max for every item
 - Be accurate with numbers
 - Return ONLY valid JSON, no markdown or additional text
 - For Walmart store, follow this tax guide: After the item price there is a letter that indicates the tax percentage: D, H = 0%; Y, Z = 5%; A, C, E, J = 12%
@@ -42,49 +76,25 @@ export async function POST(request: NextRequest) {
     "description": "Brief description of the purchase",
     "payment_method": "credit card | debit card | cash | bank transfer",
     "store": "Store name",
-    "amount": "Total amount before taxes (number only)",
-    "total_expense": "Total amount including taxes (number only)",
+    "amount": "Total amount before taxes (number only, string format)",
+    "total_expense": "Total amount including taxes (number only, string format)",
     "date": "Date in YYYY-MM-DD format"
   },
   "purchases": [
     {
       "item": "Item name",
       "category": "Category name (groceries, electronics, clothing, etc.)",
-      "purchaseAmount": "Item price (number only)",
+      "purchaseAmount": "Item price (number only, string format)",
       "taxes": "Tax percentage as string (0%, 5%, 12%)",
       "notes": "Any relevant notes"
     }
   ]
 }`
-
-    const result = await genAI?.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-          {
-            role: "assistant",
-            parts: [
-              {
-                inlineData: {
-                  mimeType: file.type,
-                  data: base64Image,
-                },
-              },
-            ],
-          },
-        ],
-      });
+      }
+    });
 
     const text = result?.text;
 
-console.log(text);
     // Clean up response (remove markdown code blocks if present)
     let cleanedText = text?.trim();
     if (cleanedText?.startsWith('```json')) {

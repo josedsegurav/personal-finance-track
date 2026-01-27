@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Upload, Loader2, X } from "lucide-react";
+import { Upload, Loader2, X, AlertCircle } from "lucide-react";
 
 interface ExtractedData {
     expense: {
@@ -28,48 +28,63 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
     const [isUploading, setIsUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [fileImg, setFileImg] = useState<File | undefined>();
-    const [analyzing, setAnalizing] = useState(false);
+    const [fileImg, setFileImg] = useState<File | null>(null);
+    const [analyzing, setAnalyzing] = useState(false);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        setFileImg(file)
+
+        // Clear previous state
+        setError(null);
+        setPreview(null);
+        setFileImg(null);
+
         if (!file) return;
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            setError('Please upload an image file');
+            setError('Please upload an image file (JPG, PNG, WEBP)');
+            e.target.value = ''; // Clear the input
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             setError('Image size should be less than 5MB');
+            e.target.value = ''; // Clear the input
             return;
         }
 
-
-
-        setError(null);
+        setFileImg(file);
         setIsUploading(true);
 
         // Create preview
         const reader = new FileReader();
+
         reader.onloadend = () => {
             setPreview(reader.result as string);
             setIsUploading(false);
         };
+
         reader.onerror = () => {
-            setError('Failed to read the selected image');
+            setError('Failed to read the selected image. Please try again.');
             setIsUploading(false);
+            setFileImg(null);
+            e.target.value = ''; // Clear the input
         };
 
         reader.readAsDataURL(file);
     };
-    const handleAnalize = async () => {
-        if (!fileImg) return;
 
-        setAnalizing(true);
+    const handleAnalyze = async () => {
+        if (!fileImg) {
+            setError('Please select an image first');
+            return;
+        }
+
+        setError(null); // Clear previous errors
+        setAnalyzing(true);
+
         try {
             const formData = new FormData();
             formData.append('image', fileImg);
@@ -79,32 +94,55 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                 body: formData,
             });
 
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned an invalid response');
+            }
+
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to analyze invoice');
+                throw new Error(result.error || `Server error: ${response.status}`);
             }
 
             if (result.success && result.data) {
                 onDataExtracted(result.data);
-                // Clear preview after successful extraction
-                setTimeout(() => setPreview(null), 2000);
+
+                // Show success feedback, then clear after user has time to see it
+                setTimeout(() => {
+                    clearPreview();
+                }, 2000);
+            } else {
+                throw new Error('No data extracted from invoice');
             }
         } catch (err) {
-            console.error('Error uploading image:', err);
-            setError(err instanceof Error ? err.message : 'Failed to analyze invoice');
+            console.error('Error analyzing invoice:', err);
+
+            // Provide more specific error messages
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                setError('Network error. Please check your connection and try again.');
+            } else {
+                setError(err instanceof Error ? err.message : 'Failed to analyze invoice. Please try again.');
+            }
         } finally {
-            setAnalizing(false);
+            setAnalyzing(false);
         }
-    }
+    };
 
     const clearPreview = () => {
         setPreview(null);
         setError(null);
         setIsUploading(false);
-        setAnalizing(false);
-        setFileImg(undefined);
+        setAnalyzing(false);
+        setFileImg(null);
+
+        // Clear the file input
+        const input = document.getElementById('invoice-upload') as HTMLInputElement;
+        if (input) input.value = '';
     };
+
+    const isDisabled = isUploading || analyzing;
 
     return (
         <div className="mb-6">
@@ -120,15 +158,23 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
 
                     <label
                         htmlFor="invoice-upload"
-                        className={`inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg cursor-pointer transition-all ${isUploading
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-blue-700 hover:shadow-lg'
-                            }`}
+                        className={`inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg transition-all ${
+                            isDisabled
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'cursor-pointer hover:bg-blue-700 hover:shadow-lg'
+                        }`}
                     >
-                        <Upload className="mr-2 h-5 w-5" />
-                        Choose Image
-
-
+                        {isUploading ? (
+                            <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Loading...
+                            </>
+                        ) : (
+                            <>
+                                <Upload className="mr-2 h-5 w-5" />
+                                Choose Image
+                            </>
+                        )}
                     </label>
 
                     <input
@@ -136,7 +182,7 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        disabled={isUploading}
+                        disabled={isDisabled}
                         className="hidden"
                     />
 
@@ -150,7 +196,9 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                     <div className="mt-4 relative flex flex-col items-center">
                         <button
                             onClick={clearPreview}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                            disabled={analyzing}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Clear preview"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -159,15 +207,31 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                             alt="Invoice preview"
                             className="max-h-64 mx-auto rounded-lg shadow-lg"
                         />
-                        <button onClick={handleAnalize} disabled={analyzing} className={`mt-5 w-fit px-6 py-3 bg-blue-600 text-white font-medium rounded-lg transition-all ${analyzing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                            {analyzing ? <Loader2 className="animate-spin mr-2 h-5 w-5"/> : "Analyze"}
+                        <button
+                            onClick={handleAnalyze}
+                            disabled={analyzing}
+                            className={`mt-5 w-fit px-6 py-3 bg-blue-600 text-white font-medium rounded-lg transition-all inline-flex items-center ${
+                                analyzing
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'cursor-pointer hover:bg-blue-700'
+                            }`}
+                        >
+                            {analyzing ? (
+                                <>
+                                    <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                                    Analyzing...
+                                </>
+                            ) : (
+                                'Analyze Invoice'
+                            )}
                         </button>
                     </div>
                 )}
 
                 {/* Error message */}
                 {error && (
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                        <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
                         <p className="text-sm text-red-600">{error}</p>
                     </div>
                 )}

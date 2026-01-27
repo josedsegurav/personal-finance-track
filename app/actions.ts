@@ -70,6 +70,8 @@ export const forgotPasswordAction = async (formData: FormData) => {
     redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
   });
 
+
+
   if (error) {
     console.error(error.message);
     return encodedRedirect(
@@ -132,3 +134,5 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+
+

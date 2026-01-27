@@ -14,6 +14,11 @@ export default async function Purchases() {
     return redirect("/sign-in");
   }
 
+  let demoAccount = false;
+  if(user.email == "lacimaonline@gmail.com") {
+    demoAccount = true;
+  }
+
   const { data: purchases } = await supabase.from("purchases").select(`
     id,
     created_at,
@@ -122,7 +127,7 @@ export default async function Purchases() {
           currentMonthTaxes={totalTaxes}
         />
       </div>
-      <ChatBot data={purchases} />
+      <ChatBot account={demoAccount} data={purchases} />
     </>
   );
 }
