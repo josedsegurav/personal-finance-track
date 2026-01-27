@@ -3,6 +3,7 @@ import Transactions from "../../../components/dashboard/transactions";
 import SidebarNav from "@/components/sidebar";
 import { redirect } from "next/navigation";
 import ChatBot from "@/components/chatbot/chatBot";
+import { getExpense, getIncome } from "@/hooks/supabaseQueries";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -15,12 +16,12 @@ export default async function Page() {
   }
 
   let demoAccount = false;
-  if(user.email == "lacimaonline@gmail.com") {
+  if (user.email == "lacimaonline@gmail.com") {
     demoAccount = true;
   }
 
-  const { data: income } = await supabase.from("income").select(`*`);
-  const { data: expenses } = await supabase.from("expenses").select(`*`);
+  const income = await getIncome(supabase);
+  const expenses = await getExpense(supabase);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
@@ -122,8 +123,8 @@ export default async function Page() {
                 Net Balance
               </h3>
               <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center ${balance >= 0
-                  ? 'bg-columbia-blue bg-opacity-20'
-                  : 'bg-bittersweet bg-opacity-10'
+                ? 'bg-columbia-blue bg-opacity-20'
+                : 'bg-bittersweet bg-opacity-10'
                 }`}>
                 <svg className={`w-4 h-4 lg:w-5 lg:h-5 ${balance >= 0 ? 'text-columbia-blue' : 'text-bittersweet'
                   }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

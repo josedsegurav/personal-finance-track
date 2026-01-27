@@ -13,7 +13,7 @@ if (!apiKey) {
 }
 
 export default function ChatBot({ account, data }: ChatBotProps) {
-console.log(account)
+
   if (account) return;
 
   if (!account) {

@@ -32,3 +32,23 @@ export async function getStores(supabase: Awaited<ReturnType<typeof createClient
 
     return data;
 }
+
+export async function getIncome(supabase: Awaited<ReturnType<typeof createClient>>) {
+    const { data, error } = await supabase.from("income").select(`*`);
+
+    if (error) {
+        throw new Error(`Failed to fetch income: ${error.message}`);
+    }
+
+    return data;
+}
+
+export async function getExpense(supabase: Awaited<ReturnType<typeof createClient>>) {
+    const { data, error } = await supabase.from("expenses").select(`*`);
+
+    if (error) {
+        throw new Error(`Failed to fetch expense: ${error.message}`);
+    }
+
+    return data;
+}
