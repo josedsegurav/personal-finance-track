@@ -3,11 +3,8 @@
 import {
   Bar,
   BarChart,
-  Pie,
-  PieChart,
   CartesianGrid,
   XAxis,
-  LabelList,
 } from "recharts";
 import { useEffect, useState } from "react";
 import {
@@ -23,10 +20,26 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { ExpenseDetailed } from "@/app/types";
 
-export default function Chart(props: any) {
+interface ChartProps {
+  filters: {
+    month: number;
+    year: number;
+    store: string;
+  };
+  expenses: ExpenseDetailed[];
+  months: Array<string>;
+}
+
+interface GroupedData {
+  store: string;
+  total_expense: number;
+}
+
+export default function Chart(props: ChartProps) {
   const { filters, expenses, months } = props;
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<GroupedData[]>([]);
   const [ChartConfig, setChartConfig] = useState<ChartConfig>({});
   const [isMobile, setIsMobile] = useState(false);
 
@@ -47,20 +60,9 @@ export default function Chart(props: any) {
   }, []);
 
   useEffect(() => {
-    interface GroupedData {
-      store: string;
-      total_expense: number;
-    }
-
-    interface Expense {
-      stores: {
-        store_name: string;
-      };
-      total_expense: number;
-    }
 
     const groupedData = expenses.reduce(
-      (acc: Record<string, GroupedData>, expense: Expense) => {
+      (acc: Record<string, GroupedData>, expense) => {
         if (!acc[expense.stores.store_name]) {
           acc[expense.stores.store_name] = {
             store: expense.stores.store_name,

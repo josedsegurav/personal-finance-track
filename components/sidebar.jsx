@@ -9,8 +9,6 @@ import {
   ShoppingCart,
   PlusCircle,
   User,
-  Menu,
-  X,
 } from "lucide-react";
 import {
   Sidebar,
@@ -18,7 +16,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -31,7 +28,7 @@ import { signOutAction } from "@/app/actions";
 export default function SidebarNav(props) {
   const { activeMenu } = props;
 
-  const [activeLink, setActiveLink] = useState(activeMenu);
+  const [ activeLink ] = useState(activeMenu);
 
   return (
     <>

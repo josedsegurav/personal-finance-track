@@ -3,11 +3,8 @@
 import {
   Bar,
   BarChart,
-  Pie,
-  PieChart,
   CartesianGrid,
   XAxis,
-  LabelList,
 } from "recharts";
 import { useEffect, useState } from "react";
 import {
@@ -23,11 +20,26 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Description } from "@radix-ui/react-dialog";
+import { Income } from "@/app/types";
 
-export default function Chart(props: any) {
+interface ChartProps {
+  filters: {
+    month: number;
+    year: number;
+  };
+  income: Income[];
+  months: Array<string>;
+}
+
+interface Data {
+  description: string;
+  net_income: number;
+  fill: string;
+}
+
+export default function Chart(props: ChartProps) {
   const { filters, income, months } = props;
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Data[]>([]);
   const [ChartConfig, setChartConfig] = useState<ChartConfig>({});
   const [isMobile, setIsMobile] = useState(false);
 
@@ -50,7 +62,7 @@ export default function Chart(props: any) {
   }, []);
 
   useEffect(() => {
-    const chartData = income.map((item: any, index: any) => ({
+    const chartData = income.map((item, index) => ({
       description: item.description,
       net_income: item.net_income,
       fill: "hsl(var(--chart-" + (index + 1) + "))",
@@ -61,7 +73,6 @@ export default function Chart(props: any) {
       net_income: {
         label: "Net Income",
       },
-      ...chartData,
     } satisfies ChartConfig);
   }, [income]);
 

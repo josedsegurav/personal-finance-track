@@ -3,24 +3,19 @@ import { createClient } from '@/utils/supabase/server'
 import FiltersAndMovements from "../../../components/income/filtermovements"
 import SidebarNav from '@/components/sidebar';
 import ChatBot from "@/components/chatbot/chatBot";
-import { redirect } from "next/navigation";
+import { getIncome, getUser } from '@/hooks/supabaseQueries';
 
 export default async function Purchases() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect("/sign-in");
-  }
+  const user = await getUser(supabase);
 
   let demoAccount = false;
   if (user.email == "lacimaonline@gmail.com") {
     demoAccount = true;
   }
 
-  const { data: income } = await supabase.from("income").select(`*`);
+  const income = await getIncome(supabase);
 
   const currentDate = new Date();
   const currentMonth = new Intl.DateTimeFormat("en-US", { month: "long" }).format(currentDate);
@@ -28,30 +23,30 @@ export default async function Purchases() {
   //   // Calculate totals
   const totalGrossIncome =
     income ? income.filter(
-      (eachIncome: any) =>
+      (eachIncome) =>
         new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
-          (eachIncome: any) =>
+          (eachIncome) =>
             new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
-        ).reduce((sum: any, eachIncome: any) => sum + eachIncome.gross_income, 0)
+        ).reduce((sum, eachIncome) => sum + eachIncome.gross_income, 0)
       : 0;
 
   const totalNetIncome =
     income ? income.filter(
-      (eachIncome: any) =>
+      (eachIncome) =>
         new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
-          (eachIncome: any) =>
+          (eachIncome) =>
             new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
-        ).reduce((sum: any, eachIncome: any) => sum + eachIncome.net_income, 0)
+        ).reduce((sum, eachIncome) => sum + eachIncome.net_income, 0)
       : 0;
 
   const totalTaxes =
     income ? income.filter(
-      (eachIncome: any) =>
+      (eachIncome) =>
         new Date(eachIncome.income_date).getFullYear() == currentDate.getFullYear()).filter(
-          (eachIncome: any) =>
+          (eachIncome) =>
             new Date(eachIncome.income_date).getUTCMonth() == currentDate.getMonth()
         ).reduce(
-          (sum: any, eachIncome: any) =>
+          (sum, eachIncome) =>
             sum + eachIncome.gross_income - eachIncome.net_income,
           0
         )

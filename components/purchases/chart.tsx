@@ -20,10 +20,26 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { PurchaseDetailed } from "@/app/types";
 
-export default function Chart(props: any) {
+interface ChartProps {
+  filters: {
+    month: number;
+    year: number;
+    category: string;
+  };
+  purchases: PurchaseDetailed[];
+  months: Array<string>;
+}
+
+interface GroupedData {
+  category: string;
+  amount: number;
+}
+
+export default function Chart(props: ChartProps) {
   const { filters, purchases, months } = props;
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<GroupedData[]>([]);
   const [ChartConfig, setChartConfig] = useState<ChartConfig>({});
   const [isMobile, setIsMobile] = useState(false);
 
@@ -44,21 +60,8 @@ export default function Chart(props: any) {
 
 
   useEffect(() => {
-    interface GroupedData {
-      category: string;
-      amount: number;
-    }
-
-    interface Purchase {
-      categories: {
-        category_name: string;
-      };
-      amount: number;
-      taxes: number;
-    }
-
     const groupedData = purchases.reduce(
-      (acc: Record<string, GroupedData>, purchase: Purchase) => {
+      (acc: Record<string, GroupedData>, purchase) => {
         if (!acc[purchase.categories.category_name]) {
           acc[purchase.categories.category_name] = {
             category: purchase.categories.category_name,
@@ -102,52 +105,52 @@ export default function Chart(props: any) {
 
   return (
     <div className="mb-6 lg:mb-8">
-  <Card className="flex flex-col w-full">
-    <CardHeader className="items-center pb-4 px-4 lg:px-6">
-      <CardTitle className="text-lg lg:text-xl">Expense Breakdown</CardTitle>
-      <CardDescription className="text-center text-sm">
-        {months[filters.month]} {filters.year} - {filters.category === "all" ? "All Categories" : purchases[0]?.categories.category_name}
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="flex-1 pb-4 px-4 lg:px-6">
-      <ChartContainer
-        className="w-full h-64 lg:h-80"
-        config={ChartConfig}
-      >
-        <BarChart
-          accessibilityLayer
-          data={data}
-          margin={{
-            top: 20,
-            right: 12,
-            left: 12,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="category"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            fontSize={12}
-            angle={isMobile ? -45 : 0}
-            textAnchor={isMobile ? "end" : "middle"}
-            height={isMobile ? 80 : 60}
-          />
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
-          <Bar
-            dataKey="amount"
-            fill="var(--color-desktop)"
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ChartContainer>
-    </CardContent>
-  </Card>
-</div>
+      <Card className="flex flex-col w-full">
+        <CardHeader className="items-center pb-4 px-4 lg:px-6">
+          <CardTitle className="text-lg lg:text-xl">Expense Breakdown</CardTitle>
+          <CardDescription className="text-center text-sm">
+            {months[filters.month]} {filters.year} - {filters.category === "all" ? "All Categories" : purchases[0]?.categories.category_name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 pb-4 px-4 lg:px-6">
+          <ChartContainer
+            className="w-full h-64 lg:h-80"
+            config={ChartConfig}
+          >
+            <BarChart
+              accessibilityLayer
+              data={data}
+              margin={{
+                top: 20,
+                right: 12,
+                left: 12,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="category"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                fontSize={12}
+                angle={isMobile ? -45 : 0}
+                textAnchor={isMobile ? "end" : "middle"}
+                height={isMobile ? 80 : 60}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Bar
+                dataKey="amount"
+                fill="var(--color-desktop)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

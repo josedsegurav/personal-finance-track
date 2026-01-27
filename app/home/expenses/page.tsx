@@ -1,35 +1,20 @@
 import { createClient } from "@/utils/supabase/server";
 import Transactions from "../../../components/expenses/transactions";
 import Sidebar from "@/components/sidebar";
-import { redirect } from "next/navigation";
 import ChatBot from "@/components/chatbot/chatBot";
+import { getExpenseDetailed, getUser } from "@/hooks/supabaseQueries";
 
 export default async function expenses() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
-    return redirect("/sign-in");
-  }
+  const user = await getUser(supabase);
 
   let demoAccount = false;
   if(user.email == "lacimaonline@gmail.com") {
     demoAccount = true;
   }
 
-  const { data: expenses } = await supabase.from("expenses").select(`
-    id,
-    created_at,
-    amount,
-    description,
-    stores (id, store_name),
-    payment_method,
-    expense_date,
-    user_id,
-    total_expense
-`);
+  const expenses = await getExpenseDetailed(supabase);
 
   const { data: stores } = await supabase.from("stores").select();
 
@@ -41,31 +26,31 @@ export default async function expenses() {
   const totalexpenses = expenses
     ? expenses
       .filter(
-        (expense: any) =>
+        (expense) =>
           new Date(expense.expense_date).getFullYear() ==
           currentDate.getFullYear()
       )
       .filter(
-        (expense: any) =>
+        (expense) =>
           new Date(expense.expense_date).getUTCMonth() ==
           currentDate.getMonth()
       )
-      .reduce((sum: any, expense: any) => sum + expense.amount, 0)
+      .reduce((sum, expense) => sum + expense.amount, 0)
     : 0;
 
   const totalExpensesAfterTax = expenses
     ? expenses
       .filter(
-        (expense: any) =>
+        (expense) =>
           new Date(expense.expense_date).getFullYear() ===
           currentDate.getFullYear()
       )
       .filter(
-        (expense: any) =>
+        (expense) =>
           new Date(expense.expense_date).getUTCMonth() ===
           currentDate.getMonth()
       )
-      .reduce((sum: any, expense: any) => sum + expense.total_expense, 0)
+      .reduce((sum, expense) => sum + expense.total_expense, 0)
     : 0;
 
   const totalTaxes = expenses ? totalExpensesAfterTax - totalexpenses : 0;

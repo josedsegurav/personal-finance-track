@@ -6,7 +6,6 @@ import Chart from "./chart";
 
 export default function FiltersAndMovements(props) {
   const {
-    currentMonth,
     currentDate,
     income,
     currentMonthNetIncome,

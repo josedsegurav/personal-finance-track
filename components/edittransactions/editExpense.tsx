@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { ExpenseDetailed, Store } from "@/app/types";
 
 interface FormExpenseData {
   description: string;
@@ -21,7 +22,12 @@ interface FormExpenseData {
   date: string;
 }
 
-export default function EditExpense(props: any) {
+interface EditExpenseProps {
+  expense: ExpenseDetailed;
+  stores: Store[];
+}
+
+export default function EditExpense(props: EditExpenseProps) {
   const supabase = createClient();
   const [formExpenseData, setformExpenseData] = useState<FormExpenseData>({
     description: props.expense.description,
@@ -46,7 +52,7 @@ export default function EditExpense(props: any) {
 
   const handleEdit = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("expenses")
         .update([
           {
@@ -74,7 +80,7 @@ export default function EditExpense(props: any) {
 
   const handleDelete = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("expenses")
         .delete()
         .eq("id", props.expense.id)
@@ -153,7 +159,7 @@ export default function EditExpense(props: any) {
         >
           <option value="">Select a store</option>
           {props.stores &&
-            props.stores.map((store: any) => (
+            props.stores.map((store) => (
               <option key={store.id} value={store.id}>
                 {store.store_name}
               </option>

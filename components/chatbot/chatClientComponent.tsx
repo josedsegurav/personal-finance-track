@@ -15,7 +15,7 @@ interface Message {
 }
 
 interface ChatClientComponentProps {
-    data: Object | null;
+    data: object | null;
     apiKey: string;
 }
 
