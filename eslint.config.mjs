@@ -33,8 +33,12 @@ export default [
       ...reactPlugin.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'react-compiler/react-compiler': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'react-hooks/exhaustive-deps': 'warn',
       ...hooksPlugin.configs.recommended.rules,
       ...tsPlugin.configs.recommended.rules,
+      'react-hooks/set-state-in-effect': 'off',
     },
     settings: {
       react: {

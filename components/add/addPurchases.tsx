@@ -6,18 +6,18 @@ import CategoryEdit from "@/components/add/categoriesEdit";
 import { Category } from "@/app/types";
 
 
-interface ExpenseData {
-  description: string;
-  store: string;
-  amount: string;
-  total_expense: string;
-  payment_method: string;
-  date: string;
-}
+// interface ExpenseData {
+//   description: string;
+//   store: string;
+//   amount: string;
+//   total_expense: string;
+//   payment_method: string;
+//   date: string;
+// }
 
-interface AddPurchasesProps {
-  expenseData: ExpenseData;
-}
+// interface AddPurchasesProps {
+//   expenseData: ExpenseData;
+// }
 
 interface FormData {
   category: string;
@@ -27,7 +27,7 @@ interface FormData {
   notes: string;
 }
 
-export default function AddPurchases({ expenseData }: AddPurchasesProps) {
+export default function AddPurchases() {
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [loading, setLoading] = useState({
     categories: true,
@@ -45,7 +45,7 @@ export default function AddPurchases({ expenseData }: AddPurchasesProps) {
     notes: "",
   });
 
-const [expenseId, setExpenseId] = useState<string | null>(null);
+// const [expenseId, setExpenseId] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -82,73 +82,73 @@ const [expenseId, setExpenseId] = useState<string | null>(null);
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    try {
-      const { data, error } = await supabase
-        .from("expenses")
-        .insert([
-          {
-            description: expenseData.description,
-            store_id: parseInt(expenseData.store),
-            amount: parseFloat(expenseData.amount),
-            total_expense: parseFloat(expenseData.total_expense),
-            payment_method: expenseData.payment_method,
-            expense_date: expenseData.date,
-          },
-        ])
-        .select();
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from("expenses")
+  //       .insert([
+  //         {
+  //           description: expenseData.description,
+  //           store_id: parseInt(expenseData.store),
+  //           amount: parseFloat(expenseData.amount),
+  //           total_expense: parseFloat(expenseData.total_expense),
+  //           payment_method: expenseData.payment_method,
+  //           expense_date: expenseData.date,
+  //         },
+  //       ])
+  //       .select();
 
-      if (error) throw error;
-
-
-      if (data && data[0]) {setExpenseId(data[0].id)}
-
-      console.log(`Expense added:`, data);
-
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      alert("Failed to add expense");
-    }
+  //     if (error) throw error;
 
 
-    try {
-      const { data, error } = await supabase
-        .from("purchases")
-        .insert([
-          {
-            item: formData.item,
-            category_id: parseInt(formData.category),
-            amount: parseFloat(formData.amount),
-            taxes: parseFloat(formData.taxes),
-            notes: formData.notes,
-            expense_id: expenseId,
-          },
-        ])
-        .select();
+  //     if (data && data[0]) {setExpenseId(data[0].id)}
 
-      if (error) throw error;
+  //     console.log(`Expense added:`, data);
 
-      console.log("Purchase added:", data[0]);
+  //   } catch (err) {
+  //     console.error("Error submitting form:", err);
+  //     alert("Failed to add expense");
+  //   }
 
-      // Reset form
-      setFormData({
-        item: "",
-        category: "",
-        amount: "",
-        taxes: "0%",
-        notes: "",
-      });
-      alert(
-        "Purchase added successfully!"
-      );
-      // redirect("/expenses");
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      alert("Failed to add purchase");
-    }
-  };
+
+  //   try {
+  //     const { data, error } = await supabase
+  //       .from("purchases")
+  //       .insert([
+  //         {
+  //           item: formData.item,
+  //           category_id: parseInt(formData.category),
+  //           amount: parseFloat(formData.amount),
+  //           taxes: parseFloat(formData.taxes),
+  //           notes: formData.notes,
+  //           expense_id: expenseId,
+  //         },
+  //       ])
+  //       .select();
+
+  //     if (error) throw error;
+
+  //     console.log("Purchase added:", data[0]);
+
+  //     // Reset form
+  //     setFormData({
+  //       item: "",
+  //       category: "",
+  //       amount: "",
+  //       taxes: "0%",
+  //       notes: "",
+  //     });
+  //     alert(
+  //       "Purchase added successfully!"
+  //     );
+  //     // redirect("/expenses");
+  //   } catch (err) {
+  //     console.error("Error submitting form:", err);
+  //     alert("Failed to add purchase");
+  //   }
+  // };
 
   // Debugging UI
   if (error) {
