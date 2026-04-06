@@ -16,9 +16,12 @@ import {
     getSavingsAllPlans,
     getAllTimeSavingsContributions,
     getBudgets,
+    getCategories,
+    getStores,
 } from "@/hooks/supabaseQueries";
 import Link from "next/link";
 import { Budget, Category, Expense, Income, SavingsPlan } from "@/app/types";
+import { redirect } from "next/navigation";
 
 export default async function Page() {
     const supabase = await createClient();
@@ -40,6 +43,8 @@ export default async function Page() {
         savingsPlansThisMonth,
         allSavingsPlans,
         budgets,
+        categories,
+        stores,
     ] = await Promise.all([
         getIncome(supabase),
         getExpense(supabase),
@@ -49,7 +54,13 @@ export default async function Page() {
         getSavingsPlans(supabase, currentMonth, currentYear),
         getSavingsAllPlans(supabase),
         getBudgets(supabase, currentMonth, currentYear),
+        getCategories(supabase),
+        getStores(supabase),
     ]);
+
+    if (categories.length === 0 || stores.length === 0) {
+        redirect("/home/onboarding");
+    }
 
     // ── Helper: filter records to a given month/year ─────────────────────────
     // Parse date strings as local time by splitting on "T" and using the

@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { Geist } from "next/font/google";
-import { cookies } from "next/headers"
+// import { cookies } from "next/headers"
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -23,8 +23,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-   const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "false"
+  //  const cookieStore = await cookies()
+  // const defaultOpen = cookieStore.get("sidebar_state")?.value === "false"
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <Head>

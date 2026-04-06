@@ -1,8 +1,6 @@
 "use client";
 import { createClient } from "@/utils/supabase/client";
 import { useState, useMemo } from "react";
-import StoresEdit from "@/components/add/storesEdit";
-import CategoryEdit from "@/components/add/categoriesEdit";
 import ImageInvoiceUpload from "@/components/add/ImageInvoiceUpload";
 import PurchaseItemCard, {
   PurchaseItem,
@@ -389,8 +387,7 @@ export default function ExpenseForm({
                   </option>
                 ))}
               </select>
-              <StoresEdit stores={stores} />
-            </div>
+</div>
 
             {/* Amount before taxes */}
             <div>
@@ -487,8 +484,7 @@ export default function ExpenseForm({
                       </option>
                     ))}
                   </select>
-                  <CategoryEdit categories={categories} />
-                </div>
+</div>
 
                 {/* Amount */}
                 <div>

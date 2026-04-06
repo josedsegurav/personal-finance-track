@@ -1,5 +1,4 @@
 "use client";
-import CategoryEdit from "@/components/add/categoriesEdit";
 import { Category } from "@/app/types";
 
 export interface PurchaseItem {
@@ -92,8 +91,7 @@ export default function PurchaseItemCard({
               </option>
             ))}
           </select>
-          <CategoryEdit categories={categories} />
-        </div>
+</div>
 
         {/* Amount */}
         <div>

@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import CategoryEdit from "@/components/add/categoriesEdit";
 import { PurchaseItem, TAX_OPTIONS, EMPTY_PURCHASE } from "./PurchaseItemCard";
 import { Category } from "@/app/types";
 
@@ -94,8 +93,7 @@ export default function PurchaseItemForm({
                   </option>
                 ))}
               </select>
-              <CategoryEdit categories={categories} />
-            </div>
+</div>
 
             {/* Amount */}
             <div>

@@ -27,19 +27,27 @@ export default async function SavingsPage() {
         getAllTimeSavingsContributions(supabase),
     ]);
 
-    // ── Balance formula ──────────────────────────────────────────────────────
+    // ── Balance formula ────────────────────────────────────────────
+    // Parse date strings as local time to avoid UTC-offset bugs where e.g.
+    // "2026-04-01" becomes March 31 at UTC-5 (Winnipeg).
+    function parseLocalDate(dateStr: string): Date {
+        const [datePart] = dateStr.split("T");
+        const [y, m, d] = datePart.split("-").map(Number);
+        return new Date(y, m - 1, d);
+    }
+
     const monthlyIncome = (income ?? [])
-        .filter(i =>
-            new Date(i.income_date).getMonth() === currentMonth &&
-            new Date(i.income_date).getFullYear() === currentYear
-        )
+        .filter(i => {
+            const d = parseLocalDate(i.income_date);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
         .reduce((s, i) => s + parseFloat(i.net_income), 0);
 
     const monthlyExpenses = (expenses ?? [])
-        .filter(e =>
-            new Date(e.expense_date).getMonth() === currentMonth &&
-            new Date(e.expense_date).getFullYear() === currentYear
-        )
+        .filter(e => {
+            const d = parseLocalDate(e.expense_date);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
         .reduce((s, e) => s + parseFloat(e.total_expense), 0);
 
     const totalPlanned = (plans ?? [])
@@ -152,7 +160,6 @@ export default async function SavingsPage() {
                     <SavingsManager
                         accounts={accountsWithPlan}
                         available={available}
-                        rawBalance={rawBalance}
                         currentMonth={currentMonth}
                         currentYear={currentYear}
                     />

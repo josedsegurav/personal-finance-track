@@ -1,39 +1,39 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { getUser, getIncome, getExpense, getSavingsPlans } from "@/hooks/supabaseQueries";
+import { getUser } from "@/hooks/supabaseQueries";
 import { revalidatePath } from "next/cache";
 
 // ─── Helper: recompute available-to-save server-side (tamper-proof) ──────────
-async function computeAvailable(
-    supabase: Awaited<ReturnType<typeof createClient>>,
-    userId: string,
-    month: number,
-    year: number,
-    excludePlanId?: number
-): Promise<number> {
-    const [income, expenses, plans] = await Promise.all([
-        getIncome(supabase),
-        getExpense(supabase),
-        getSavingsPlans(supabase, month, year),
-    ]);
+// async function computeAvailable(
+//     supabase: Awaited<ReturnType<typeof createClient>>,
+//     userId: string,
+//     month: number,
+//     year: number,
+//     excludePlanId?: number
+// ): Promise<number> {
+//     const [income, expenses, plans] = await Promise.all([
+//         getIncome(supabase),
+//         getExpense(supabase),
+//         getSavingsPlans(supabase, month, year),
+//     ]);
 
-    const monthlyIncome = (income ?? [])
-        .filter(i => new Date(i.income_date).getMonth() === month &&
-                     new Date(i.income_date).getFullYear() === year)
-        .reduce((s, i) => s + parseFloat(i.net_income), 0);
+//     const monthlyIncome = (income ?? [])
+//         .filter(i => new Date(i.income_date).getMonth() === month &&
+//                      new Date(i.income_date).getFullYear() === year)
+//         .reduce((s, i) => s + parseFloat(i.net_income), 0);
 
-    const monthlyExpenses = (expenses ?? [])
-        .filter(e => new Date(e.expense_date).getMonth() === month &&
-                     new Date(e.expense_date).getFullYear() === year)
-        .reduce((s, e) => s + parseFloat(e.total_expense), 0);
+//     const monthlyExpenses = (expenses ?? [])
+//         .filter(e => new Date(e.expense_date).getMonth() === month &&
+//                      new Date(e.expense_date).getFullYear() === year)
+//         .reduce((s, e) => s + parseFloat(e.total_expense), 0);
 
-    const totalPlanned = (plans ?? [])
-        .filter(p => p.id !== excludePlanId)
-        .reduce((s, p) => s + p.planned_amount, 0);
+//     const totalPlanned = (plans ?? [])
+//         .filter(p => p.id !== excludePlanId)
+//         .reduce((s, p) => s + p.planned_amount, 0);
 
-    return monthlyIncome - monthlyExpenses - totalPlanned;
-}
+//     return monthlyIncome - monthlyExpenses - totalPlanned;
+// }
 
 // ─── Savings Accounts ────────────────────────────────────────────────────────
 
@@ -78,12 +78,12 @@ export async function upsertSavingsPlan(formData: FormData) {
     const planned_amount = parseFloat(formData.get("planned_amount") as string);
     const month = Number(formData.get("month"));
     const year = Number(formData.get("year"));
-    const existing_plan_id = formData.get("existing_plan_id")
-        ? Number(formData.get("existing_plan_id"))
-        : undefined;
+    // const existing_plan_id = formData.get("existing_plan_id")
+    //     ? Number(formData.get("existing_plan_id"))
+    //     : undefined;
 
     // Recompute available server-side, excluding current plan if editing
-    const available = await computeAvailable(supabase, user.id, month, year, existing_plan_id);
+    // const available = await computeAvailable(supabase, user.id, month, year, existing_plan_id);
 
     // Allow over-allocation — only warn, don't block (handled in UI)
     // But we do prevent negative planned amounts

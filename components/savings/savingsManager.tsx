@@ -32,7 +32,6 @@ const PALETTE = [
 interface Props {
     accounts: SavingsAccountWithPlan[];
     available: number;
-    rawBalance: number;
     currentMonth: number;
     currentYear: number;
 }
@@ -40,7 +39,6 @@ interface Props {
 export default function SavingsManager({
     accounts,
     available,
-    rawBalance,
     currentMonth,
     currentYear,
 }: Props) {

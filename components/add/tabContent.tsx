@@ -1,59 +1,60 @@
 "use client";
 import IncomeForm from "@/components/add/incomeform";
-import ExpenseForm from "@/components/add/expenseform";
+import ExpenseForm from "@/components/add/ExpenseForm";
+import ManageTab from "@/components/add/ManageTab";
 import { Suspense, useState } from "react";
-import { Category, Store } from "@/app/types"
+import { Category, Store } from "@/app/types";
 
 type TabContentProps = {
     categoriesData: Category[] | null;
     storesData: Store[] | null;
 };
 
+type Tab = "income" | "expense" | "manage";
+
 export default function TabContent({ categoriesData, storesData }: TabContentProps) {
-    const [ categories ] = useState<Category[] | null>(categoriesData);
-    const [ stores ] = useState<Store[] | null>(storesData);
+    const [activeTab, setActiveTab] = useState<Tab>("income");
 
-    const [ activeTab, setActiveTab ] = useState("income");
-
-    const handleTabChange = (tab: string) => {
-        setActiveTab(tab);
-    };
-
+    const tabs: { id: Tab; label: string }[] = [
+        { id: "income",  label: "Income"  },
+        { id: "expense", label: "Expense" },
+        { id: "manage",  label: "Manage"  },
+    ];
 
     return (
-
         <div className="w-3/4 mx-auto">
-            {/* Tabs for transaction type */}
+            {/* Tab bar */}
             <div className="flex border-b border-gray-200 mb-6">
-                <button
-                    className={`py-3 px-6 font-medium ${activeTab === "income"
-                        ? "text-glaucous border-b-2 border-glaucous"
-                        : "text-paynes-gray hover:text-glaucous"
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        className={`py-3 px-6 font-medium ${
+                            activeTab === tab.id
+                                ? "text-glaucous border-b-2 border-glaucous"
+                                : "text-paynes-gray hover:text-glaucous"
                         }`}
-                    onClick={() => handleTabChange("income")}
-                >
-                    Income
-                </button>
-                <button
-                    className={`py-3 px-6 font-medium ${activeTab === "expense"
-                        ? "text-glaucous border-b-2 border-glaucous"
-                        : "text-paynes-gray hover:text-glaucous"
-                        }`}
-                    onClick={() => handleTabChange("expense")}
-                >
-                    Expense
-                </button>
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
-            <Suspense fallback={<div className="p-4">
-                Loading data...
-                {/* You can add a spinner here */}
-            </div>}>
-                {/* Income Form  */}
+
+            <Suspense fallback={<div className="p-4">Loading data…</div>}>
                 {activeTab === "income" && <IncomeForm />}
-                {/* Purchases form */}
-                {activeTab === "expense" && <ExpenseForm categories={categories || []} stores={stores || []} />}
+                {activeTab === "expense" && (
+                    <ExpenseForm
+                        categories={categoriesData || []}
+                        stores={storesData || []}
+                    />
+                )}
+                {activeTab === "manage" && (
+                    <ManageTab
+                        categoriesData={categoriesData || []}
+                        storesData={storesData || []}
+                    />
+                )}
             </Suspense>
         </div>
-
-    )
+    );
 }
