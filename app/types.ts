@@ -130,3 +130,16 @@ export interface SavingsAccountWithPlan extends SavingsAccount {
     allTimeSaved: number;
     progressPercent: number;         // allTimeSaved / goal_amount
 }
+
+export interface CategoryBudgetRow {
+    id: number;
+    category_id: number;
+    category_name: string;
+    allocated_amount: number;
+}
+
+export interface CategoryBudgetStatus {
+    categoryId: number;
+    categoryName: string;
+    budgetRowId: number | null;
+}
