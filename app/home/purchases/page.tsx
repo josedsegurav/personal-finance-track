@@ -1,9 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
 import FiltersAndTransactions from "../../../components/purchases/filterstransactions";
-import Sidebar from "@/components/sidebar";
 import ChatBot from "@/components/chatbot/chatBot";
 import { getCategories, getPurchases, getStores, getUser } from "@/hooks/supabaseQueries";
 import { ExpenseInPurchase } from "@/app/types";
+import SidebarNav from "@/components/sidebar";
 
 export default async function Purchases() {
   const supabase = await createClient();
@@ -64,8 +64,8 @@ export default async function Purchases() {
 
   return (
     <>
-      <Sidebar activeMenu="purchases" />
 
+      <SidebarNav activeMenu="purchases" />
       {/* Main Content */}
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-semibold text-paynes-gray mb-6">

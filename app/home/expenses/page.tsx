@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Transactions from "../../../components/expenses/transactions";
-import Sidebar from "@/components/sidebar";
+import SidebarNav from "@/components/sidebar";
 import ChatBot from "@/components/chatbot/chatBot";
 import { getExpenseDetailed, getUser } from "@/hooks/supabaseQueries";
 
@@ -71,7 +71,7 @@ export default async function expenses() {
 
   return (
     <>
-      <Sidebar activeMenu="expenses" />
+      <SidebarNav activeMenu="expenses" />
 
       {/* Main Content */}
       <div className="flex-1 px-4 py-6 lg:p-8 pt-20 lg:pt-8">

@@ -49,7 +49,7 @@ export default function CategoryEdit({ categories }) {
       if (error) throw error;
 
       console.log(`added:`, data);
-      router.refresh();
+
       alert(`Category ${newcategory} added successfully!`);
       location.reload();
 

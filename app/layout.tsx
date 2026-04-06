@@ -1,6 +1,5 @@
 import Head from 'next/head'
 import { Geist } from "next/font/google";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers"
 import "./globals.css";
 
@@ -32,14 +31,14 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
       <body className="bg-ghost-white text-foreground">
-        <SidebarProvider defaultOpen={defaultOpen}>
+        {/* <SidebarProvider defaultOpen={defaultOpen}> */}
 
           <main className="mx-auto">
             <div>
               <div>{children}</div>
             </div>
           </main>
-        </SidebarProvider>
+        {/* </SidebarProvider> */}
       </body>
     </html>
   );

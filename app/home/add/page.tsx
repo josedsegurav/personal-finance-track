@@ -1,21 +1,21 @@
-import Sidebar from "@/components/sidebar";
+
 import { createClient } from "@/utils/supabase/server";
 import TabContent from "@/components/add/tabContent";
 import { getUser, getCategories, getStores } from "@/hooks/supabaseQueries"
-import { Category, Store } from "@/app/types";
+import SidebarNav from "@/components/sidebar";
 
 export default async function Page() {
   const supabase = await createClient();
 
-  await getUser(supabase);
-
-  const categories = await getCategories(supabase) as unknown as Category[];
-
-  const stores = await getStores(supabase) as unknown as Store[];
+  const [user, categories, stores] = await Promise.all([
+    getUser(supabase),
+    getCategories(supabase),
+    getStores(supabase)
+  ]);
 
   return (
     <>
-      <Sidebar activeMenu="add" />
+      <SidebarNav activeMenu="add" />
       {/* Main Content */}
       <TabContent categoriesData={categories} storesData={stores}/>
     </>

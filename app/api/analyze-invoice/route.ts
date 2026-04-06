@@ -1,7 +1,21 @@
+import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
+import { getCategories, getStores } from "@/hooks/supabaseQueries";
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const categories = async () => {
+  const supabase = await createClient();
+  const data = await getCategories(supabase);
+  return data;
+};
+
+const stores = async () => {
+  const supabase = await createClient();
+  const data = await getStores(supabase);
+  return data;
+};
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -68,6 +82,10 @@ export async function POST(request: NextRequest) {
 - For Walmart store, follow this tax guide: After the item price there is a letter that indicates the tax percentage: D, H = 0%; Y, Z = 5%; A, C, E, J = 12%
 - For Costco store, follow this tax guide: After the item price there is a letter that indicates the tax percentage: G = 5%; P = 7%; GP = 12%, if there is no letter beside the price it is 0%
 - For taxes in other stores, choose closest match: 0%, 5%, or 12%
+- Use the categories from the database to match the category of the item using this list: ${categories}
+- Use the stores from the database to match the store of the item using this list: ${stores}
+- If the category is not found, use "other"
+- If the store is not found, use "other"
 
  Put the information in this JSON format:
 
@@ -75,7 +93,7 @@ export async function POST(request: NextRequest) {
   "expense": {
     "description": "Brief description of the purchase",
     "payment_method": "credit card | debit card | cash | bank transfer",
-    "store": "Store name",
+    "store": "Store name (from the database)",
     "amount": "Total amount before taxes (number only, string format)",
     "total_expense": "Total amount including taxes (number only, string format)",
     "date": "Date in YYYY-MM-DD format"
@@ -83,7 +101,7 @@ export async function POST(request: NextRequest) {
   "purchases": [
     {
       "item": "Item name",
-      "category": "Category name (groceries, electronics, clothing, etc.)",
+      "category": "Category name (from the database)",
       "purchaseAmount": "Item price (number only, string format)",
       "taxes": "Tax percentage as string (0%, 5%, 12%)",
       "notes": "Any relevant notes"

@@ -57,9 +57,6 @@ export default async function Purchases() {
     <>
       <SidebarNav activeMenu="income" />
 
-
-
-
       {/* Main Content */}
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-semibold text-paynes-gray mb-6">

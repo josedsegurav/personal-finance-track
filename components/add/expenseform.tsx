@@ -1,27 +1,18 @@
 "use client";
 import { createClient } from "@/utils/supabase/client";
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import StoresEdit from "@/components/add/storesEdit";
 import CategoryEdit from "@/components/add/categoriesEdit";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
 import ImageInvoiceUpload from "@/components/add/ImageInvoiceUpload";
+import PurchaseItemCard, {
+  PurchaseItem,
+  TAX_OPTIONS,
+  EMPTY_PURCHASE,
+} from "@/components/add/PurchaseItemCard";
+import PurchaseItemForm from "@/components/add/PurchaseItemForm";
 import { Category, Store } from "@/app/types";
 
-
+/* ─── Types ─────────────────────────────────────────────────────────────── */
 
 interface FormExpenseData {
   description: string;
@@ -32,677 +23,562 @@ interface FormExpenseData {
   date: string;
 }
 
-interface FormPurchaseData {
-  category: string;
-  item: string;
-  purchaseAmount: string;
-  taxes: string;
-  notes: string;
-}
-
-
 export interface ExtractedData {
   expense: FormExpenseData;
-  purchases: Array<FormPurchaseData>;
+  purchases: Array<PurchaseItem>;
 }
+
+const EMPTY_EXPENSE: FormExpenseData = {
+  description: "",
+  payment_method: "",
+  store: "",
+  amount: "",
+  total_expense: "",
+  date: new Date().toISOString().split("T")[0],
+};
+
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
+
+/** Parse "5%" → 0.05 */
+function taxRate(taxStr: string): number {
+  return parseFloat(taxStr.replace("%", "")) / 100;
+}
+
+/** Sum pre-tax amounts from the items list */
+function calcPreTaxTotal(items: PurchaseItem[]): string {
+  const total = items.reduce(
+    (acc, p) => acc + (parseFloat(p.purchaseAmount) || 0),
+    0
+  );
+  return total > 0 ? total.toFixed(2) : "";
+}
+
+/** Sum post-tax amounts from the items list */
+function calcPostTaxTotal(items: PurchaseItem[]): string {
+  const total = items.reduce((acc, p) => {
+    const amt = parseFloat(p.purchaseAmount) || 0;
+    return acc + amt * (1 + taxRate(p.taxes));
+  }, 0);
+  return total > 0 ? total.toFixed(2) : "";
+}
+
+/* ─── Component ──────────────────────────────────────────────────────────── */
 
 export default function ExpenseForm({
   stores,
   categories,
 }: {
-  stores: Array<Store>;
-  categories: Array<Category>;
+  stores: Store[];
+  categories: Category[];
 }) {
   const supabase = createClient();
-  const purchaseButtonRef = useRef<HTMLButtonElement>(null);
-  const [formExpenseData, setformExpenseData] = useState<FormExpenseData>({
-    description: "",
-    payment_method: "",
-    store: "",
-    amount: "",
-    total_expense: "",
-    date: new Date().toISOString().split("T")[0],
+
+  /* Expense header fields */
+  const [expense, setExpense] = useState<FormExpenseData>(EMPTY_EXPENSE);
+
+  /* Items list */
+  const [items, setItems] = useState<PurchaseItem[]>([]);
+
+  /* Single-item mode */
+  const [singleItem, setSingleItem] = useState(false);
+  const [singleItemData, setSingleItemData] = useState<PurchaseItem>({
+    ...EMPTY_PURCHASE,
   });
 
-  const taxOptions = ["0%", "5%", "12%"];
+  /* UI state */
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const [formPurchaseData, setFormPurchaseData] = useState<FormPurchaseData>({
-    category: "",
-    item: "",
-    purchaseAmount: "",
-    taxes: "0%",
-    notes: "",
-  });
+  /* ── Derived ── */
+  const isExpenseComplete = useMemo(
+    () => Object.values(expense).every((v) => v.trim() !== ""),
+    [expense]
+  );
 
-  const [purchasesArray, setPurchasesArray] = useState<FormPurchaseData[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
+  const isSingleItemComplete = useMemo(
+    () =>
+      singleItemData.item.trim() !== "" &&
+      singleItemData.category !== "" &&
+      singleItemData.purchaseAmount.trim() !== "",
+    [singleItemData]
+  );
 
-  const handleChangeExpense = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+  const canSubmit = useMemo(() => {
+    if (!isExpenseComplete) return false;
+    if (singleItem) return isSingleItemComplete;
+    return items.length > 0;
+  }, [isExpenseComplete, singleItem, isSingleItemComplete, items]);
+
+  /* ── Handlers ── */
+
+  const handleExpenseChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setformExpenseData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setExpense((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleChangePurchase = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+  const handleSingleItemChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-
-    setFormPurchaseData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setSingleItemData((prev) => ({ ...prev, [name]: value }));
   };
-console.log(formExpenseData)
-  const isExpenseFormComplete = useMemo(() => {
-    return Object.values(formExpenseData).every((value) => value.trim() !== "");
-  }, [formExpenseData]);
 
-  const isPurchaseFormComplete = useMemo(() => {
-    const { item, category, purchaseAmount } = formPurchaseData;
-
-    return (
-      category.trim() !== "" &&
-      item.trim() !== "" &&
-      purchaseAmount.trim() !== ""
+  const handleItemChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [name]: value } : item))
     );
-  }, [formPurchaseData]);
+  };
 
+  const handleAddItem = (newItem: PurchaseItem) => {
+    setItems((prev) => [...prev, newItem]);
+    // Auto-update totals
+    const updated = [...items, newItem];
+    setExpense((prev) => ({
+      ...prev,
+      amount: calcPreTaxTotal(updated),
+      total_expense: calcPostTaxTotal(updated),
+    }));
+  };
 
+  const handleRemoveItem = (index: number) => {
+    const updated = items.filter((_, i) => i !== index);
+    setItems(updated);
+    setExpense((prev) => ({
+      ...prev,
+      amount: calcPreTaxTotal(updated),
+      total_expense: calcPostTaxTotal(updated),
+    }));
+  };
+
+  /* When single-item amount changes, propagate to expense totals */
+  const handleSingleAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    handleSingleItemChange(e);
+    const amt = parseFloat(e.target.value) || 0;
+    const rate = taxRate(singleItemData.taxes);
+    setExpense((prev) => ({
+      ...prev,
+      amount: amt > 0 ? amt.toFixed(2) : "",
+      total_expense: amt > 0 ? (amt * (1 + rate)).toFixed(2) : "",
+    }));
+  };
+
+  const handleSingleTaxChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    handleSingleItemChange(e);
+    const amt = parseFloat(singleItemData.purchaseAmount) || 0;
+    const rate = taxRate(e.target.value);
+    setExpense((prev) => ({
+      ...prev,
+      total_expense: amt > 0 ? (amt * (1 + rate)).toFixed(2) : "",
+    }));
+  };
+
+  /* Toggle single-item mode */
+  const handleSingleItemToggle = (checked: boolean) => {
+    setSingleItem(checked);
+    if (checked) {
+      // Pre-fill item name from description and amount from expense amount
+      setSingleItemData((prev) => ({
+        ...prev,
+        item: expense.description || prev.item,
+        purchaseAmount: expense.amount || prev.purchaseAmount,
+      }));
+      setItems([]);
+    } else {
+      setSingleItemData({ ...EMPTY_PURCHASE });
+    }
+  };
+
+  /* AI invoice extraction */
   const handleAIDataExtraction = (extractedData: ExtractedData) => {
-
-  console.log(extractedData)
-    // Find store ID by name
-    const matchedStore = stores?.find(
-      (store) =>
-        store.store_name.toLowerCase().includes(extractedData.expense.store.toLowerCase()) ||
-        extractedData.expense.store.toLowerCase().includes(store.store_name.toLowerCase())
+    const matchedStore = stores.find(
+      (s) =>
+        s.store_name.toLowerCase().includes(extractedData.expense.store.toLowerCase()) ||
+        extractedData.expense.store.toLowerCase().includes(s.store_name.toLowerCase())
     );
 
-    // Update expense form data
-    setformExpenseData({
-      description: extractedData.expense.description,
-      payment_method: extractedData.expense.payment_method,
+    setExpense({
+      ...extractedData.expense,
       store: matchedStore ? matchedStore.id.toString() : "",
-      amount: extractedData.expense.amount,
-      total_expense: extractedData.expense.total_expense,
-      date: extractedData.expense.date,
     });
 
-    // Update purchases array
-    const mappedPurchases = extractedData.purchases.map((purchase) => {
-      // Find category ID by name
-      const matchedCategory = categories?.find(
-        (cat) =>
-          cat.category_name.toLowerCase().includes(purchase.category.toLowerCase()) ||
-          purchase.category.toLowerCase().includes(cat.category_name.toLowerCase())
+    const mappedPurchases = extractedData.purchases.map((p) => {
+      const matchedCat = categories.find(
+        (c) =>
+          c.category_name.toLowerCase().includes(p.category.toLowerCase()) ||
+          p.category.toLowerCase().includes(c.category_name.toLowerCase())
       );
-
-      return {
-        category: matchedCategory ? matchedCategory.id.toString() : "",
-        item: purchase.item,
-        purchaseAmount: purchase.purchaseAmount,
-        taxes: purchase.taxes,
-        notes: purchase.notes,
-      };
+      return { ...p, category: matchedCat ? matchedCat.id.toString() : "" };
     });
 
-    setPurchasesArray(mappedPurchases);
+    setItems(mappedPurchases);
 
-    // Show success message
-    alert(`Successfully extracted ${extractedData.purchases.length} items from invoice!`);
+    if (mappedPurchases.length === 1) {
+      setSingleItem(true);
+      setSingleItemData(mappedPurchases[0]);
+      setItems([]);
+    } else {
+      setSingleItem(false);
+    }
 
-    setOpenDialog(true);
+    setStatusMessage(
+      `Extracted ${extractedData.purchases.length} item(s) from invoice.`
+    );
+    setStatus("success");
+    setTimeout(() => setStatus("idle"), 4000);
   };
 
-  const addToPurchaseArray = () => {
-    setPurchasesArray((prev) => [...prev, formPurchaseData]);
-
-    setFormPurchaseData({
-      item: "",
-      category: "",
-      purchaseAmount: "",
-      taxes: "0%",
-      notes: "",
-    });
-  };
-
-  const isExpenseComplete = useMemo(() => {
-    return purchasesArray.length == 0;
-  }, [purchasesArray]);
-
+  /* Submit */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatus("loading");
 
     try {
       const { data, error } = await supabase
         .from("expenses")
         .insert([
           {
-            description: formExpenseData.description,
-            store_id: parseInt(formExpenseData.store),
-            amount: parseFloat(formExpenseData.amount),
-            total_expense: parseFloat(formExpenseData.total_expense),
-            payment_method: formExpenseData.payment_method,
-            expense_date: formExpenseData.date,
+            description: expense.description,
+            store_id: parseInt(expense.store),
+            amount: parseFloat(expense.amount),
+            total_expense: parseFloat(expense.total_expense),
+            payment_method: expense.payment_method,
+            expense_date: expense.date,
           },
         ])
         .select();
 
       if (error) throw error;
-      if (data && data[0]) {
-        const expenseId = data[0].id;
-        purchasesArray.forEach(async (purchase) => {
-          try {
-            const { data, error } = await supabase
-              .from("purchases")
-              .insert([
-                {
-                  item: purchase.item,
-                  category_id: parseInt(purchase.category),
-                  amount: parseFloat(purchase.purchaseAmount),
-                  taxes: parseFloat(purchase.taxes),
-                  notes: purchase.notes,
-                  expense_id: expenseId,
-                },
-              ])
-              .select();
 
-            if (error) throw error;
+      const expenseId = data[0].id;
+      const purchasesToInsert = singleItem ? [singleItemData] : items;
 
-            console.log("Purchase added:", data[0]);
+      await Promise.all(
+        purchasesToInsert.map((p) =>
+          supabase.from("purchases").insert([
+            {
+              item: p.item,
+              category_id: parseInt(p.category),
+              amount: parseFloat(p.purchaseAmount),
+              taxes: parseFloat(p.taxes.replace("%", "")),
+              notes: p.notes,
+              expense_id: expenseId,
+            },
+          ])
+        )
+      );
 
-          } catch (err) {
-            console.error("Error submitting form:", err);
-            alert("Failed to add purchase");
-          }
-        });
-      }
-
-      console.log(`Expense added:`, data[0]);
-
-
-      // Reset form
-      setformExpenseData({
-        description: "",
-        payment_method: "",
-        store: "",
-        amount: "",
-        total_expense: "",
-        date: new Date().toISOString().split("T")[0],
-      });
-      setFormPurchaseData({
-        category: "",
-        item: "",
-        purchaseAmount: "",
-        taxes: "0%",
-        notes: "",
-      });
-      setPurchasesArray([]);
-      alert("Expense added successfully!");
+      // Reset
+      setExpense(EMPTY_EXPENSE);
+      setItems([]);
+      setSingleItem(false);
+      setSingleItemData({ ...EMPTY_PURCHASE });
+      setStatus("success");
+      setStatusMessage("Expense added successfully!");
+      setTimeout(() => setStatus("idle"), 4000);
     } catch (err) {
-      console.error("Error submitting form:", err);
-      alert("Failed to add expense");
+      console.error("Error submitting expense:", err);
+      setStatus("error");
+      setStatusMessage("Failed to add expense. Please try again.");
+      setTimeout(() => setStatus("idle"), 5000);
     }
   };
 
-  const handleChangeArray = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-
-    setPurchasesArray((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [name]: value } : item))
-    );
-
-  }
-
-  const handleRemovePurchase = (index: number) => {
-    setPurchasesArray((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  console.log(purchasesArray);
+  /* ── Render ── */
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
+      {/* AI Invoice Upload */}
       <ImageInvoiceUpload onDataExtracted={handleAIDataExtraction} />
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Item Name */}
-          <div>
-            <label
-              htmlFor="item"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Description
-            </label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              value={formExpenseData.description}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-              placeholder="A general description of the expense"
-              required
-            />
-          </div>
+      {/* Status banner */}
+      {status === "success" && (
+        <div className="px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
+          {statusMessage}
+        </div>
+      )}
+      {status === "error" && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+          {statusMessage}
+        </div>
+      )}
 
-          {/* Purchase Date */}
-          <div>
-            <label
-              htmlFor="date_of_purchase"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Date of Expense
-            </label>
-            <input
-              type="date"
-              id="date_of_purchase"
-              name="date"
-              value={formExpenseData.date}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ── Expense header ── */}
+        <div>
+          <h3 className="text-base font-semibold text-paynes-gray mb-4">
+            Expense Details
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Description
+              </label>
+              <input
+                type="text"
+                name="description"
+                value={expense.description}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                placeholder="A general description of the expense"
+                required
+              />
+            </div>
 
-          {/* Payment Method */}
-          <div>
-            <label
-              htmlFor="payment_method"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Payment Method
-            </label>
-            <select
-              id="payment_method"
-              name="payment_method"
-              value={formExpenseData.payment_method}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-            >
-              <option disabled value="">
-                Select a payment method
-              </option>
-              <option value="credit card">Credit Card</option>
-              <option value="debit card">Debit Card</option>
-              <option value="cash">Cash</option>
-              <option value="bank transfer">Bank Transfer</option>
-            </select>
-          </div>
-          {/* Store Dropdown */}
-          <div>
-            <label
-              htmlFor="store"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Store
-            </label>
-            <select
-              id="store"
-              name="store"
-              value={formExpenseData.store}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-              required
-            >
-              <option value="">Select a store</option>
-              {stores &&
-                stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.store_name}
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Date of Expense
+              </label>
+              <input
+                type="date"
+                name="date"
+                value={expense.date}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                required
+              />
+            </div>
+
+            {/* Payment Method */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Payment Method
+              </label>
+              <select
+                name="payment_method"
+                value={expense.payment_method}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+              >
+                <option disabled value="">
+                  Select a payment method
+                </option>
+                <option value="credit card">Credit Card</option>
+                <option value="debit card">Debit Card</option>
+                <option value="cash">Cash</option>
+                <option value="bank transfer">Bank Transfer</option>
+              </select>
+            </div>
+
+            {/* Store */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Store
+              </label>
+              <select
+                name="store"
+                value={expense.store}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                required
+              >
+                <option value="">Select a store</option>
+                {stores.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.store_name}
                   </option>
                 ))}
-            </select>
-            <StoresEdit stores={stores} />
-          </div>
+              </select>
+              <StoresEdit stores={stores} />
+            </div>
 
-          {/* Amount */}
-          <div>
-            <label
-              htmlFor="amount"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Amount before taxes($)
-            </label>
-            <input
-              type="number"
-              id="amount"
-              name="amount"
-              value={formExpenseData.amount}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-              required
-            />
-          </div>
+            {/* Amount before taxes */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Amount before taxes ($)
+              </label>
+              <input
+                type="number"
+                name="amount"
+                value={expense.amount}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
 
-          {/* Total Expense */}
-          <div>
-            <label
-              htmlFor="total_expense"
-              className="block text-sm font-medium text-paynes-gray mb-2"
-            >
-              Total Expense ($)
-            </label>
-            <input
-              type="number"
-              id="total_expense"
-              name="total_expense"
-              value={formExpenseData.total_expense}
-              onChange={handleChangeExpense}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-              required
-            />
+            {/* Total Expense */}
+            <div>
+              <label className="block text-sm font-medium text-paynes-gray mb-2">
+                Total Expense ($)
+              </label>
+              <input
+                type="number"
+                name="total_expense"
+                value={expense.total_expense}
+                onChange={handleExpenseChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-6">
-          {/* Add Purchase form */}
-          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            <DialogTrigger asChild>
-              <button
-                ref={purchaseButtonRef}
-                disabled={!isExpenseFormComplete}
-                className="px-4 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
-              >
-                Add Purchase Details
-              </button>
-            </DialogTrigger>
-            <DialogContent className="overflow-y-scroll max-h-screen">
-              <DialogHeader>
-                <DialogTitle>Add purchases details to the expense</DialogTitle>
-                <DialogDescription>
-                  Fill this form to add individual items to the expense.
-                </DialogDescription>
-              </DialogHeader>
-              <Accordion type="single" collapsible className="w-full">
-                {purchasesArray.length > 0 && (purchasesArray.map((purchase, index) => (
-                  <AccordionItem key={index} value={purchase.item}>
-                    <AccordionTrigger>
-                      {purchase.item}
-                    </AccordionTrigger>
-                    <AccordionContent>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input name="index" id="index" type="hidden" value={index} />
-                        {/* Item Name */}
-                        <div className="md:col-span-2">
-                          <label
-                            htmlFor="item"
-                            className="block text-sm font-medium text-paynes-gray mb-2"
-                          >
-                            Item Name
-                          </label>
-                          <input
-                            type="text"
-                            id="item"
-                            name="item"
-                            defaultValue={purchase.item}
-                            onChange={(e) => handleChangeArray(index, e)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                            placeholder="What did you buy?"
-                            required
-                          />
-                        </div>
+        {/* ── Items section ── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-paynes-gray">
+              Items Purchased
+            </h3>
+            {/* Single-item toggle */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={singleItem}
+                onChange={(e) => handleSingleItemToggle(e.target.checked)}
+                className="w-4 h-4 accent-glaucous"
+              />
+              <span className="text-sm text-paynes-gray">Single item</span>
+            </label>
+          </div>
 
-                        {/* Category Dropdown */}
-                        <div>
-                          <label
-                            htmlFor="category"
-                            className="block text-sm font-medium text-paynes-gray mb-2"
-                          >
-                            Category
-                          </label>
-                          <select
-                            id="category"
-                            name="category"
-                            defaultValue={purchase.category}
-                            onChange={(e) => handleChangeArray(index, e)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                            required
-                          >
-                            <option disabled value="">Select a category</option>
-                            {categories &&
-                              categories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                  {category.category_name}
-                                </option>
-                              ))}
-                          </select>
-                          <CategoryEdit categories={categories} />
-                        </div>
-
-                        {/* Amount */}
-                        <div>
-                          <label
-                            htmlFor="purchaseAmount"
-                            className="block text-sm font-medium text-paynes-gray mb-2"
-                          >
-                            Amount ($)
-                          </label>
-                          <input
-                            type="number"
-                            id="purchaseAmount"
-                            name="purchaseAmount"
-                            defaultValue={purchase.purchaseAmount}
-                            onChange={(e) => handleChangeArray(index, e)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                            placeholder="0.00"
-                            min="0"
-                            step="0.01"
-                            required
-                          />
-                        </div>
-
-                        {/* Tax Rate */}
-                        <div>
-                          <label
-                            htmlFor="taxes"
-                            className="block text-sm font-medium text-paynes-gray mb-2"
-                          >
-                            Tax Rate
-                          </label>
-                          <select
-                            id="taxes"
-                            name="taxes"
-                            defaultValue={purchase.taxes}
-                            onChange={(e) => handleChangeArray(index, e)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                          >
-                            {taxOptions.map((tax) => (
-                              <option key={tax} value={tax}>
-                                {tax}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* Full-width Notes field */}
-                        <div className="md:col-span-2">
-                          <label
-                            htmlFor="notes"
-                            className="block text-sm font-medium text-paynes-gray mb-2"
-                          >
-                            Notes (Optional)
-                          </label>
-                          <textarea
-                            id="notes"
-                            name="notes"
-                            defaultValue={purchase.notes}
-                            onChange={(e) => handleChangeArray(index, e)}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                            placeholder="Any additional details about this purchase..."
-                            rows={3}
-                          />
-                        </div>
-                        <button className="px-4 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50" type="button" onClick={() => handleRemovePurchase(index)}>Remove</button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )))}
-              </Accordion>
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="text-lg font-medium text-paynes-gray mb-4">Add a new item to the expense</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Item Name */}
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor="item"
-                      className="block text-sm font-medium text-paynes-gray mb-2"
-                    >
-                      Item Name
-                    </label>
-                    <input
-                      type="text"
-                      id="item"
-                      name="item"
-                      value={formPurchaseData.item}
-                      onChange={handleChangePurchase}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                      placeholder="What did you buy?"
-                      required
-                    />
-                  </div>
-
-                  {/* Category Dropdown */}
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium text-paynes-gray mb-2"
-                    >
-                      Category
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      value={formPurchaseData.category}
-                      onChange={handleChangePurchase}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                      required
-                    >
-                      <option disabled value="">Select a category</option>
-                      {categories &&
-                        categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.category_name}
-                          </option>
-                        ))}
-                    </select>
-                    <CategoryEdit categories={categories} />
-                  </div>
-
-                  {/* Amount */}
-                  <div>
-                    <label
-                      htmlFor="purchaseAmount"
-                      className="block text-sm font-medium text-paynes-gray mb-2"
-                    >
-                      Amount ($)
-                    </label>
-                    <input
-                      type="number"
-                      id="purchaseAmount"
-                      name="purchaseAmount"
-                      value={formPurchaseData.purchaseAmount}
-                      onChange={handleChangePurchase}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-
-                  {/* Tax Rate */}
-                  <div>
-                    <label
-                      htmlFor="taxes"
-                      className="block text-sm font-medium text-paynes-gray mb-2"
-                    >
-                      Tax Rate
-                    </label>
-                    <select
-                      id="taxes"
-                      name="taxes"
-                      value={formPurchaseData.taxes}
-                      onChange={handleChangePurchase}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                    >
-                      {taxOptions.map((tax) => (
-                        <option key={tax} value={tax}>
-                          {tax}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Full-width Notes field */}
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor="notes"
-                      className="block text-sm font-medium text-paynes-gray mb-2"
-                    >
-                      Notes (Optional)
-                    </label>
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      value={formPurchaseData.notes}
-                      onChange={handleChangePurchase}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
-                      placeholder="Any additional details about this purchase..."
-                      rows={3}
-                    />
-                  </div>
+          {singleItem ? (
+            /* ── Single-item inline fields ── */
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Item Name */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-paynes-gray mb-1">
+                    Item Name
+                  </label>
+                  <input
+                    type="text"
+                    name="item"
+                    value={singleItemData.item}
+                    onChange={handleSingleItemChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                    placeholder="What did you buy?"
+                  />
                 </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    disabled={!isPurchaseFormComplete}
-                    onClick={addToPurchaseArray}
-                    className="px-6 py-2 mb-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
+
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-medium text-paynes-gray mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={singleItemData.category}
+                    onChange={handleSingleItemChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
                   >
-                    Add Item
-                  </button>
+                    <option disabled value="">
+                      Select a category
+                    </option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.category_name}
+                      </option>
+                    ))}
+                  </select>
+                  <CategoryEdit categories={categories} />
                 </div>
 
-                <DialogClose asChild>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      disabled={isExpenseComplete}
-                      className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
-                    >
-                      Close to continue adding expense
-                    </button>
-                  </div>
-                </DialogClose>
+                {/* Amount */}
+                <div>
+                  <label className="block text-xs font-medium text-paynes-gray mb-1">
+                    Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    name="purchaseAmount"
+                    value={singleItemData.purchaseAmount}
+                    onChange={handleSingleAmountChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                {/* Tax Rate */}
+                <div>
+                  <label className="block text-xs font-medium text-paynes-gray mb-1">
+                    Tax Rate
+                  </label>
+                  <select
+                    name="taxes"
+                    value={singleItemData.taxes}
+                    onChange={handleSingleTaxChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                  >
+                    {TAX_OPTIONS.map((tax) => (
+                      <option key={tax} value={tax}>
+                        {tax}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Notes */}
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-paynes-gray mb-1">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={singleItemData.notes}
+                    onChange={handleSingleItemChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                    placeholder="Any additional details..."
+                    rows={2}
+                  />
+                </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+          ) : (
+            /* ── Multi-item list ── */
+            <div className="space-y-3">
+              {items.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">
+                  No items added yet. Use the button below or enable{" "}
+                  <strong>Single item</strong> mode.
+                </p>
+              )}
 
-          <button
-            disabled={isExpenseComplete}
-            type="submit"
-            className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50"
-          >
-            Add Expense
-          </button>
+              {items.map((purchase, index) => (
+                <PurchaseItemCard
+                  key={index}
+                  purchase={purchase}
+                  index={index}
+                  categories={categories}
+                  onChange={handleItemChange}
+                  onRemove={handleRemoveItem}
+                />
+              ))}
 
+              <PurchaseItemForm categories={categories} onAdd={handleAddItem} />
+            </div>
+          )}
         </div>
-      </form >
-    </div >
+
+        {/* ── Submit ── */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={!canSubmit || status === "loading"}
+            className="px-6 py-2 bg-glaucous text-white font-medium rounded-lg hover:bg-glaucous-dark transition-colors focus:outline-none focus:ring-2 focus:ring-glaucous focus:ring-opacity-50 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {status === "loading" ? "Saving…" : "Add Expense"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

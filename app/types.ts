@@ -8,6 +8,24 @@ export interface Category {
     category_name: string;
 }
 
+// After the Category interface:
+export interface Budget {
+    id: number;
+    user_id: string;
+    category_id: number;
+    categories?: Category;
+    amount: number;
+    month: number;
+    year: number;
+    created_at: Date;
+}
+
+export interface BudgetWithSpent extends Budget {
+    spent: number;
+    remaining: number;
+    percentage: number;
+}
+
 export interface Store {
     id: number;
     store_name: string;
@@ -72,3 +90,43 @@ export interface PurchaseDialog {
     notes: string;
 }
 
+export interface SavingsAccount {
+    id: number;
+    user_id: string;
+    name: string;
+    description?: string;
+    goal_amount?: number;
+    color: string;
+    is_active: boolean;
+    is_recurring: boolean;
+    created_at: Date;
+}
+
+export interface SavingsPlan {
+    id: number;
+    user_id: string;
+    savings_account_id: number;
+    planned_amount: number;
+    month: number;
+    year: number;
+    created_at: Date;
+}
+
+export interface SavingsContribution {
+    id: number;
+    savings_plan_id: number;
+    amount: number;
+    note?: string;
+    contribution_date: string;
+    created_at: Date;
+}
+
+export interface SavingsAccountWithPlan extends SavingsAccount {
+    plan: SavingsPlan | null;
+    contributions: SavingsContribution[];
+    plannedAmount: number;
+    totalContributed: number;
+    remaining: number;               // plannedAmount - totalContributed
+    allTimeSaved: number;
+    progressPercent: number;         // allTimeSaved / goal_amount
+}

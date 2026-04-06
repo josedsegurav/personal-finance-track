@@ -1,6 +1,6 @@
 "use client";
 import IncomeForm from "@/components/add/incomeform";
-import ExpenseForm from "@/components/add/expenseform";
+import ExpenseForm from "@/components/add/ExpenseForm";
 import { Suspense, useState } from "react";
 import { Category, Store } from "@/app/types"
 
@@ -22,7 +22,7 @@ export default function TabContent({ categoriesData, storesData }: TabContentPro
 
     return (
 
-        <div className="flex-1 p-8">
+        <div className="w-3/4 mx-auto">
             {/* Tabs for transaction type */}
             <div className="flex border-b border-gray-200 mb-6">
                 <button
@@ -35,7 +35,7 @@ export default function TabContent({ categoriesData, storesData }: TabContentPro
                     Income
                 </button>
                 <button
-                    className={`py-3 px-6 font-medium ${activeTab === "purchase"
+                    className={`py-3 px-6 font-medium ${activeTab === "expense"
                         ? "text-glaucous border-b-2 border-glaucous"
                         : "text-paynes-gray hover:text-glaucous"
                         }`}

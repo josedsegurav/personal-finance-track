@@ -133,7 +133,7 @@ const ai = new GoogleGenAI({apiKey})
             {/* Chat Window */}
             {
                 isOpen && (
-                    <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-72 sm:w-80 h-80 sm:h-96 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+                    <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-72 sm:w-96 h-80 sm:h-96 flex flex-col animate-in slide-in-from-bottom-5 duration-300">
                         {/* Header */}
                         <div className="flex items-center justify-between p-3 lg:p-4 border-b border-gray-200 bg-gradient-to-r from-columbia-blue to-columbia-blue/90 text-white rounded-t-lg">
                             <div className="flex items-center space-x-2">
