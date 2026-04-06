@@ -1,6 +1,6 @@
 "use client";
 import IncomeForm from "@/components/add/incomeform";
-import ExpenseForm from "@/components/add/ExpenseForm";
+import ExpenseForm from "@/components/add/expenseform";
 import { Suspense, useState } from "react";
 import { Category, Store } from "@/app/types"
 
