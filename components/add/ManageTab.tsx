@@ -198,7 +198,7 @@ function ManageSection({
 
       {/* Add row */}
       <div className="px-5 py-4 border-t border-gray-100 bg-gray-50">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <input
             type="text"
             value={addValue}
@@ -271,7 +271,7 @@ export default function ManageTab({ categoriesData, storesData }: ManageTabProps
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-3/4 mx-auto">
       <p className="text-sm text-paynes-gray opacity-60">
         Manage the categories and stores available when adding expenses.
       </p>

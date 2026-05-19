@@ -293,7 +293,7 @@ export default function ExpenseForm({
 
   /* ── Render ── */
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
+    <div className="w-3/4 mx-auto bg-white p-6 rounded-lg shadow-sm space-y-6">
       {/* AI Invoice Upload */}
       <ImageInvoiceUpload onDataExtracted={handleAIDataExtraction} />
 

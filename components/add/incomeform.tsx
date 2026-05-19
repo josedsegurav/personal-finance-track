@@ -71,7 +71,7 @@ export default function IncomeForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="w-3/4 mx-auto bg-white p-6 rounded-lg shadow-sm">
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>

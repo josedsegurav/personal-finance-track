@@ -22,9 +22,9 @@ export default function TabContent({ categoriesData, storesData }: TabContentPro
     ];
 
     return (
-        <div className="w-3/4 mx-auto">
+        <div className="mx-auto">
             {/* Tab bar */}
-            <div className="flex border-b border-gray-200 mb-6">
+            <div className="flex justify-center border-b border-gray-200 mb-6">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}

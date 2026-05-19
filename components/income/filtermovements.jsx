@@ -144,6 +144,7 @@ export default function FiltersAndMovements(props) {
             className="w-full py-2.5 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-columbia-blue bg-white"
           >
             <option value="all">All Years</option>
+            <option value="2026">2026</option>
             <option value="2025">2025</option>
             <option value="2024">2024</option>
           </select>
@@ -171,7 +172,7 @@ export default function FiltersAndMovements(props) {
         <>
          {/* Summary Card */}
           <div className="bg-columbia-blue bg-opacity-10 p-4 lg:p-6 rounded-lg mb-4">
-            <div className="flex flex-row justify-between gap-3">
+            <div className="sm:flex flex-row justify-between gap-3">
               <h3 className="text-lg font-semibold text-paynes-gray">Total Summary</h3>
               <div className="flex justify-between gap-6 text-center sm:text-right">
                 <div>

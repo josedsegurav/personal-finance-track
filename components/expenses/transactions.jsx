@@ -190,7 +190,7 @@ export default function Transactions(props) {
         <>
         {/* Summary Card */}
           <div className="bg-columbia-blue bg-opacity-10 p-4 lg:p-6 rounded-lg mb-4">
-            <div className="flex flex-row justify-between gap-3">
+            <div className="sm:flex flex-row justify-between gap-3">
               <h3 className="text-lg font-semibold text-paynes-gray">Total Summary</h3>
               <div className="flex justify-between gap-6 text-center sm:text-right">
                 <div>
