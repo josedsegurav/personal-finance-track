@@ -122,7 +122,7 @@ export default function SettlementSheet({
                         Settle {MONTH_NAMES[fromMonth]} {fromYear}
                     </SheetTitle>
                     <SheetDescription>
-                        Review each category's budget difference and choose what to do with it.
+                        Review each category`&apos;`s budget difference and choose what to do with it.
                         These adjustments will carry into {MONTH_NAMES[toMonth]} {toYear}.
                     </SheetDescription>
                 </SheetHeader>
