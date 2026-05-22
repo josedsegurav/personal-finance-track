@@ -185,7 +185,7 @@ export default function SavingsManager({
                                 className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
                             >
                                 {/* Color stripe */}
-                                <div className="h-2" style={{ backgroundColor: account.color }} />
+                                <div className="h-2" style={{ backgroundColor: account.color ?? PALETTE[0] }} />
 
                                 <div className="p-5">
                                     {/* Header */}
@@ -240,7 +240,7 @@ export default function SavingsManager({
                                                     className="h-1.5 rounded-full transition-all"
                                                     style={{
                                                         width: `${account.progressPercent}%`,
-                                                        backgroundColor: account.color,
+                                                        backgroundColor: account.color ?? PALETTE[0],
                                                     }}
                                                 />
                                             </div>
@@ -277,7 +277,7 @@ export default function SavingsManager({
                                                             width: `${account.plannedAmount > 0
                                                                 ? Math.min((account.totalContributed / account.plannedAmount) * 100, 100)
                                                                 : 0}%`,
-                                                            backgroundColor: fullyContributed ? "#22c55e" : account.color,
+                                                            backgroundColor: fullyContributed ? "#22c55e" : (account.color ?? PALETTE[0]),
                                                         }}
                                                     />
                                                 </div>
