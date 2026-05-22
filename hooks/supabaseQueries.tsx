@@ -166,3 +166,54 @@ export async function getSavingsAllPlans(supabase: Awaited<ReturnType<typeof cre
     if (error) return [];
     return data ?? [];
 }
+
+export async function getBudgetCarryovers(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    toMonth: number,
+    toYear: number
+) {
+    const { data, error } = await supabase
+        .from("budget_carryovers")
+        .select(`
+            id, category_id, from_month, from_year,
+            to_month, to_year, delta_amount, disposition,
+            target_category_id, target_savings_account_id, settled_at
+        `)
+        .eq("to_month", toMonth)
+        .eq("to_year", toYear);
+
+    if (error) return [];
+    return data ?? [];
+}
+
+export async function getUnsettledMonth(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    currentMonth: number,
+    currentYear: number
+): Promise<{ month: number; year: number } | null> {
+    // Compute the previous calendar month relative to what's passed in
+    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevYear  = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+    // Check if any budgets exist for that previous month
+    const { data: prevBudgets } = await supabase
+        .from("budgets")
+        .select("id")
+        .eq("month", prevMonth)
+        .eq("year", prevYear)
+        .limit(1);
+
+    if (!prevBudgets || prevBudgets.length === 0) return null;
+
+    // Check if carryovers have already been settled FROM that month
+    const { data: existingCarryovers } = await supabase
+        .from("budget_carryovers")
+        .select("id")
+        .eq("from_month", prevMonth)
+        .eq("from_year", prevYear)
+        .limit(1);
+
+    if (existingCarryovers && existingCarryovers.length > 0) return null;
+
+    return { month: prevMonth, year: prevYear };
+}

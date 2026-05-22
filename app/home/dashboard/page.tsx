@@ -18,9 +18,10 @@ import {
     getBudgets,
     getCategories,
     getStores,
+    getBudgetCarryovers,
 } from "@/hooks/supabaseQueries";
 import Link from "next/link";
-import { Budget, Category, Expense, Income, SavingsPlan } from "@/app/types";
+import { Budget, Category, Expense, Income, SavingsPlan, BudgetCarryover } from "@/app/types";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
@@ -45,6 +46,7 @@ export default async function Page() {
         budgets,
         categories,
         stores,
+        carryovers,           // ← new
     ] = await Promise.all([
         getIncome(supabase),
         getExpense(supabase),
@@ -56,6 +58,7 @@ export default async function Page() {
         getBudgets(supabase, currentMonth, currentYear),
         getCategories(supabase),
         getStores(supabase),
+        getBudgetCarryovers(supabase, currentMonth, currentYear),  // ← new
     ]);
 
     if (categories.length === 0 || stores.length === 0) {
@@ -119,22 +122,43 @@ export default async function Page() {
         if (catId != null) spentByCategoryId[catId] = (spentByCategoryId[catId] || 0) + p.amount + p.taxes;
     });
 
-    // ── Budget health ────────────────────────────────────────────────────────
-    const totalBudgeted    = (budgets as unknown as Budget[]).reduce((s, b) => s + b.amount, 0);
-    const totalBudgetSpent = Object.values(spentByCategoryId).reduce((s, v) => s + v, 0);
-    const budgetHealthPct  = totalBudgeted > 0 ? Math.min(Math.round((totalBudgetSpent / totalBudgeted) * 100), 100) : -1;
+   // ── Carryover map for current month ─────────────────────────────────────
+const carryoverByCategory: Record<number, number> = {};
+(carryovers as unknown as BudgetCarryover[]).forEach((c) => {
+    if (c.disposition === "same_category") {
+        carryoverByCategory[c.category_id] =
+            (carryoverByCategory[c.category_id] ?? 0) + c.delta_amount;
+    } else if (c.disposition === "other_category" && c.target_category_id != null) {
+        carryoverByCategory[c.target_category_id] =
+            (carryoverByCategory[c.target_category_id] ?? 0) + c.delta_amount;
+    }
+});
 
-    // ── Budget strip rows ─────────────────────────────────────────────────────
-    const budgetStripData = (budgets as unknown as Budget[]).map(b => {
-        const catId = (b.categories as unknown as Category)?.id ?? b.category_id;
-        const spent = spentByCategoryId[catId] ?? 0;
-        return {
-            category_name: (b.categories as unknown as Category)?.category_name ?? "Unknown",
-            planned: b.amount as number,
-            spent,
-            percentage: b.amount > 0 ? Math.min((spent / b.amount) * 100, 150) : 0,
-        };
-    }).sort((a, b) => b.percentage - a.percentage);
+// ── Budget health ────────────────────────────────────────────────────────
+const totalBudgeted = (budgets as unknown as Budget[]).reduce((s, b) => {
+    const catId = (b.categories as unknown as Category)?.id ?? b.category_id;
+    return s + b.amount + (carryoverByCategory[catId] ?? 0);
+}, 0);
+const totalBudgetSpent = Object.values(spentByCategoryId).reduce((s, v) => s + v, 0);
+const budgetHealthPct  = totalBudgeted > 0
+    ? Math.min(Math.round((totalBudgetSpent / totalBudgeted) * 100), 100)
+    : -1;
+
+// ── Budget strip rows ─────────────────────────────────────────────────────
+const budgetStripData = (budgets as unknown as Budget[]).map(b => {
+    const catId     = (b.categories as unknown as Category)?.id ?? b.category_id;
+    const spent     = spentByCategoryId[catId] ?? 0;
+    const carryover = carryoverByCategory[catId] ?? 0;
+    const effective = b.amount + carryover;
+    return {
+        category_name: (b.categories as unknown as Category)?.category_name ?? "Unknown",
+        planned:       effective,
+        base_amount:   b.amount as number,
+        carryover,
+        spent,
+        percentage:    effective > 0 ? Math.min((spent / effective) * 100, 150) : 0,
+    };
+}).sort((a, b) => b.percentage - a.percentage);
 
     // ── Category donut ────────────────────────────────────────────────────────
     const DONUT_COLORS = ["#577399","#BDD5EA","#22c55e","#f59e0b","#a78bfa","#f97316","#14b8a6","#ec4899"];

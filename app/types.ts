@@ -24,6 +24,8 @@ export interface BudgetWithSpent extends Budget {
     spent: number;
     remaining: number;
     percentage: number;
+    carryover: number;
+    effective_amount: number;
 }
 
 export interface Store {
@@ -91,15 +93,15 @@ export interface PurchaseDialog {
 }
 
 export interface SavingsAccount {
-    id: number;
-    user_id: string;
-    name: string;
-    description?: string;
-    goal_amount?: number;
-    color: string;
-    is_active: boolean;
-    is_recurring: boolean;
-    created_at: Date;
+    id:           number;
+    user_id:      string;
+    name:         string;
+    description?: string | null;
+    goal_amount?: number | null;
+    color?:       string | null;
+    is_active?:   boolean | null;
+    is_recurring?: boolean | null;
+    created_at?:  string | null;
 }
 
 export interface SavingsPlan {
@@ -143,3 +145,38 @@ export interface CategoryBudgetStatus {
     categoryName: string;
     budgetRowId: number | null;
 }
+
+export type CarryoverDisposition = 'same_category' | 'other_category' | 'savings' | 'discard';
+
+export interface BudgetCarryover {
+    id: number;
+    user_id: string;
+    category_id: number;
+    from_month: number;
+    from_year: number;
+    to_month: number;
+    to_year: number;
+    delta_amount: number;
+    disposition: CarryoverDisposition;
+    target_category_id?: number | null;
+    target_savings_account_id?: number | null;
+    settled_at: string;
+}
+
+export interface CarryoverDispositionEntry {
+    category_id: number;
+    delta_amount: number;
+    disposition: CarryoverDisposition;
+    target_category_id?: number | null;
+    target_savings_account_id?: number | null;
+}
+
+export interface SettlementRow {
+    category_id: number;
+    category_name: string;
+    base_amount: number;
+    effective_amount: number;
+    spent: number;
+    delta: number; // effective_amount - spent; positive = surplus, negative = overspent
+}
+
