@@ -19,6 +19,7 @@ interface FormExpenseData {
   amount: string;
   total_expense: string;
   date: string;
+  aiSuggestedStore?: string;
 }
 
 export interface ExtractedData {
@@ -89,7 +90,13 @@ export default function ExpenseForm({
 
   /* ── Derived ── */
   const isExpenseComplete = useMemo(
-    () => Object.values(expense).every((v) => v.trim() !== ""),
+    () =>
+      expense.description.trim() !== "" &&
+      expense.payment_method.trim() !== "" &&
+      expense.store.trim() !== "" &&
+      expense.amount.trim() !== "" &&
+      expense.total_expense.trim() !== "" &&
+      expense.date.trim() !== "",
     [expense]
   );
 
@@ -128,9 +135,17 @@ export default function ExpenseForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setItems((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [name]: value } : item))
-    );
+    setItems((prev) => {
+      const updated = prev.map((item, i) =>
+        i === index ? { ...item, [name]: value } : item
+      );
+      setExpense((prevExp) => ({
+        ...prevExp,
+        amount: calcPreTaxTotal(updated),
+        total_expense: calcPostTaxTotal(updated),
+      }));
+      return updated;
+    });
   };
 
   const handleAddItem = (newItem: PurchaseItem) => {
@@ -204,18 +219,45 @@ export default function ExpenseForm({
         extractedData.expense.store.toLowerCase().includes(s.store_name.toLowerCase())
     );
 
-    setExpense({
-      ...extractedData.expense,
-      store: matchedStore ? matchedStore.id.toString() : "",
-    });
-
     const mappedPurchases = extractedData.purchases.map((p) => {
       const matchedCat = categories.find(
         (c) =>
           c.category_name.toLowerCase().includes(p.category.toLowerCase()) ||
           p.category.toLowerCase().includes(c.category_name.toLowerCase())
       );
-      return { ...p, category: matchedCat ? matchedCat.id.toString() : "" };
+      return {
+        ...p,
+        category: matchedCat ? matchedCat.id.toString() : "",
+        aiSuggestedCategory: matchedCat ? undefined : p.category,
+      };
+    });
+
+    // Derive totals from items when available (Fix 4b + 4d)
+    let expenseAmount = extractedData.expense.amount;
+    let expenseTotal = extractedData.expense.total_expense;
+    let discrepancyNote = "";
+
+    if (mappedPurchases.length > 0) {
+      const itemPreTax = calcPreTaxTotal(mappedPurchases);
+      const itemPostTax = calcPostTaxTotal(mappedPurchases);
+      expenseAmount = itemPreTax;
+      expenseTotal = itemPostTax;
+
+      const modelTotal = parseFloat(extractedData.expense.total_expense) || 0;
+      const itemTotalNum = parseFloat(itemPostTax) || 0;
+      if (modelTotal > 0 && Math.abs(modelTotal - itemTotalNum) > 0.04) {
+        discrepancyNote = `Receipt total was $${modelTotal.toFixed(2)}, adjusted to match itemized total of $${itemTotalNum.toFixed(2)}.`;
+      }
+    } else {
+      discrepancyNote = "No items detected — using receipt total as-is.";
+    }
+
+    setExpense({
+      ...extractedData.expense,
+      store: matchedStore ? matchedStore.id.toString() : "",
+      aiSuggestedStore: matchedStore ? undefined : extractedData.expense.store,
+      amount: expenseAmount,
+      total_expense: expenseTotal,
     });
 
     setItems(mappedPurchases);
@@ -229,7 +271,7 @@ export default function ExpenseForm({
     }
 
     setStatusMessage(
-      `Extracted ${extractedData.purchases.length} item(s) from invoice.`
+      `Extracted ${extractedData.purchases.length} item(s) from invoice.${discrepancyNote ? ` ${discrepancyNote}` : ""}`
     );
     setStatus("success");
     setTimeout(() => setStatus("idle"), 4000);
@@ -377,7 +419,11 @@ export default function ExpenseForm({
                 name="store"
                 value={expense.store}
                 onChange={handleExpenseChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent ${
+                  expense.store === "" && expense.aiSuggestedStore
+                    ? "border-amber-300 bg-amber-50"
+                    : "border-gray-200"
+                }`}
                 required
               >
                 <option value="">Select a store</option>
@@ -387,6 +433,11 @@ export default function ExpenseForm({
                   </option>
                 ))}
               </select>
+              {expense.store === "" && expense.aiSuggestedStore && (
+                <p className="text-xs text-amber-700 mt-1">
+                  AI suggested: &ldquo;{expense.aiSuggestedStore}&rdquo; &mdash; please select the closest match
+                </p>
+              )}
 </div>
 
             {/* Amount before taxes */}
@@ -399,12 +450,22 @@ export default function ExpenseForm({
                 name="amount"
                 value={expense.amount}
                 onChange={handleExpenseChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                readOnly={!singleItem && items.length > 0}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent ${
+                  !singleItem && items.length > 0
+                    ? "bg-gray-50 text-paynes-gray opacity-60 cursor-not-allowed"
+                    : "border-gray-200"
+                }`}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
                 required
               />
+              {!singleItem && items.length > 0 && (
+                <p className="text-xs text-paynes-gray opacity-50 mt-1">
+                  Calculated from items below
+                </p>
+              )}
             </div>
 
             {/* Total Expense */}
@@ -417,12 +478,22 @@ export default function ExpenseForm({
                 name="total_expense"
                 value={expense.total_expense}
                 onChange={handleExpenseChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                readOnly={!singleItem && items.length > 0}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent ${
+                  !singleItem && items.length > 0
+                    ? "bg-gray-50 text-paynes-gray opacity-60 cursor-not-allowed"
+                    : "border-gray-200"
+                }`}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
                 required
               />
+              {!singleItem && items.length > 0 && (
+                <p className="text-xs text-paynes-gray opacity-50 mt-1">
+                  Calculated from items below
+                </p>
+              )}
             </div>
           </div>
         </div>

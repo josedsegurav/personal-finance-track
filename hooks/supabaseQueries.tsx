@@ -186,14 +186,27 @@ export async function getBudgetCarryovers(
     return data ?? [];
 }
 
+export async function getExpectedIncome(
+    supabase: Awaited<ReturnType<typeof createClient>>
+) {
+    const { data, error } = await supabase
+        .from("expected_income")
+        .select("id, user_id, amount, updated_at")
+        .maybeSingle();
+
+    if (error) return null; // graceful fallback if table not migrated
+    return data ?? null;
+}
+
 export async function getUnsettledMonth(
     supabase: Awaited<ReturnType<typeof createClient>>,
     currentMonth: number,
     currentYear: number
 ): Promise<{ month: number; year: number } | null> {
-    // Compute the previous calendar month relative to what's passed in
-    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-    const prevYear  = currentMonth === 1 ? currentYear - 1 : currentYear;
+    // Compute the previous calendar month relative to what's passed in.
+    // currentMonth is 0-indexed (getMonth()), so January = 0 → prevMonth = 11.
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
 
     // Check if any budgets exist for that previous month
     const { data: prevBudgets } = await supabase

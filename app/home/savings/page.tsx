@@ -8,8 +8,9 @@ import {
     getSavingsAccounts,
     getSavingsPlans,
     getAllTimeSavingsContributions,
+    getExpectedIncome,
 } from "@/hooks/supabaseQueries";
-import { SavingsAccountWithPlan, SavingsPlan } from "@/app/types";
+import { SavingsAccountWithPlan, SavingsPlan, ExpectedIncome } from "@/app/types";
 
 export default async function SavingsPage() {
     const supabase = await createClient();
@@ -19,12 +20,13 @@ export default async function SavingsPage() {
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
-    const [income, expenses, accounts, plans, allTimeContribs] = await Promise.all([
+    const [income, expenses, accounts, plans, allTimeContribs, expectedIncome] = await Promise.all([
         getIncome(supabase),
         getExpense(supabase),
         getSavingsAccounts(supabase),
         getSavingsPlans(supabase, currentMonth, currentYear),
         getAllTimeSavingsContributions(supabase),
+        getExpectedIncome(supabase),
     ]);
 
     // ── Balance formula ────────────────────────────────────────────
@@ -58,6 +60,11 @@ export default async function SavingsPage() {
 
     // Available = what's left after all savings plans are reserved
     const available = rawBalance - totalPlanned;
+
+    // Plan-ahead available based on expected income (ignoring actual income/expenses)
+    const availableToPlan = expectedIncome?.amount != null && expectedIncome.amount > 0
+        ? expectedIncome.amount - totalPlanned
+        : null;
 
     // ── All-time saved per account ────────────────────────────────────────────
     const allTimeSavedByAccount: Record<number, number> = {};
@@ -154,6 +161,13 @@ export default async function SavingsPage() {
                             <p className="text-xs text-paynes-gray opacity-50 mt-1">
                                 {available < 0 ? "Over-allocated — adjust plans below" : "Unallocated"}
                             </p>
+                            {availableToPlan != null && (
+                                <p className={`text-xs mt-1.5 pt-1.5 border-t border-gray-100 ${
+                                    availableToPlan >= 0 ? "text-glaucous" : "text-bittersweet"
+                                }`}>
+                                    Plan-ahead: ${availableToPlan.toFixed(2)} remaining
+                                </p>
+                            )}
                         </div>
                     </div>
 

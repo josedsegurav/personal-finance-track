@@ -183,3 +183,86 @@ export async function copyBudgetsFromPreviousMonth(
 
     revalidatePath("/home/budget");
 }
+
+export async function updateExpectedIncome(formData: FormData) {
+    const supabase = await createClient();
+    const user = await getUser(supabase);
+
+    const amount = parseFloat(formData.get("amount") as string);
+    if (isNaN(amount) || amount < 0) {
+        throw new Error("Expected income must be a valid amount >= 0");
+    }
+
+    const { error } = await supabase
+        .from("expected_income")
+        .upsert(
+            { user_id: user.id, amount, updated_at: new Date().toISOString() },
+            { onConflict: "user_id" }
+        );
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/home/budget");
+    revalidatePath("/home/dashboard");
+    revalidatePath("/home/savings");
+}
+
+export async function resetCategoryCarryover(
+    categoryId: number,
+    month: number,
+    year: number
+) {
+    const supabase = await createClient();
+    const user = await getUser(supabase);
+
+    // Fetch all carryovers for the target month to recompute net carryover server-side
+    const { data: carryovers, error: fetchError } = await supabase
+        .from("budget_carryovers")
+        .select("category_id, delta_amount, disposition, target_category_id")
+        .eq("user_id", user.id)
+        .eq("to_month", month)
+        .eq("to_year", year);
+
+    if (fetchError) throw new Error(fetchError.message);
+    if (!carryovers?.length) return; // nothing to reset
+
+    // Recompute net carryover for this category, matching the aggregation logic
+    // in app/home/budget/page.tsx (carryoverByCategory build).
+    let netTotal = 0;
+    for (const c of carryovers) {
+        if (c.disposition === "same_category" && c.category_id === categoryId) {
+            netTotal += c.delta_amount;
+        } else if (
+            c.disposition === "other_category" &&
+            c.target_category_id != null &&
+            c.target_category_id === categoryId
+        ) {
+            netTotal += c.delta_amount;
+        }
+    }
+
+    if (netTotal === 0) return; // no-op
+
+    // Insert a corrective row that cancels out the net carryover.
+    // Using same month/year for from/to — this is a same-month correction,
+    // not the output of settling a previous month.
+    const { error: insertError } = await supabase
+        .from("budget_carryovers")
+        .insert({
+            user_id:                   user.id,
+            category_id:               categoryId,
+            from_month:                month,
+            from_year:                 year,
+            to_month:                  month,
+            to_year:                   year,
+            delta_amount:              -netTotal,
+            disposition:               "same_category",
+            target_category_id:        null,
+            target_savings_account_id: null,
+        });
+
+    if (insertError) throw new Error(insertError.message);
+
+    revalidatePath("/home/budget");
+    revalidatePath("/home/dashboard");
+}

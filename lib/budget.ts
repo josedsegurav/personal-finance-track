@@ -158,3 +158,16 @@ export function totalMonthlyExpenses(
     return sum + parseFloat(String(row.total_expense));
   }, 0);
 }
+
+/**
+ * Returns the unallocated portion of expected monthly income after subtracting
+ * total allocated amounts (budgets, savings plans, etc.). Returns null when
+ * expected income is not set.
+ */
+export function unallocatedFromExpected(
+  expectedIncome: number | null,
+  totalAllocated: number
+): number | null {
+  if (expectedIncome == null) return null;
+  return expectedIncome - totalAllocated;
+}

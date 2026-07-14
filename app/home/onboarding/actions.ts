@@ -20,6 +20,7 @@ export interface OnboardingPayload {
     stores: string[];
     budgets: OnboardingBudget[];     // amount per category name
     savings: OnboardingSavings[];
+    expectedIncome: string;          // empty string = not set
 }
 
 export async function submitOnboarding(payload: OnboardingPayload) {
@@ -86,6 +87,19 @@ export async function submitOnboarding(payload: OnboardingPayload) {
             .insert(savingsRows);
 
         if (savingsError) throw new Error(`Failed to save savings goals: ${savingsError.message}`);
+    }
+
+    // ── 5. Upsert expected income (if provided) ──────────────────────────────
+    const expectedAmount = parseFloat(payload.expectedIncome);
+    if (!isNaN(expectedAmount) && expectedAmount > 0) {
+        const { error: incomeError } = await supabase
+            .from("expected_income")
+            .upsert(
+                { user_id: user.id, amount: expectedAmount, updated_at: new Date().toISOString() },
+                { onConflict: "user_id" }
+            );
+
+        if (incomeError) throw new Error(`Failed to save expected income: ${incomeError.message}`);
     }
 
     redirect("/home/dashboard");

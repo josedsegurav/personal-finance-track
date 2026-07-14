@@ -9,8 +9,11 @@ import {
     getBudgetCarryovers,
     getUnsettledMonth,
     getSavingsAccounts,
+    getExpectedIncome,
 } from "@/hooks/supabaseQueries";
 import { BudgetWithSpent, BudgetCarryover, Category, SettlementRow  } from "@/app/types";
+import ExpectedIncomeCard from "@/components/budget/ExpectedIncomeCard";
+import { unallocatedFromExpected } from "@/lib/budget";
 
 export default async function BudgetPage({
     searchParams,
@@ -28,7 +31,7 @@ export default async function BudgetPage({
     const selectedMonth = params.month != null ? Number(params.month) : todayMonth;
     const selectedYear  = params.year  != null ? Number(params.year)  : todayYear;
 
-    const [budgets, categories, purchases, carryovers, unsettledMonth, savingsAccounts] =
+    const [budgets, categories, purchases, carryovers, unsettledMonth, savingsAccounts, expectedIncome] =
         await Promise.all([
             getBudgets(supabase, selectedMonth, selectedYear),
             getCategories(supabase),
@@ -36,6 +39,7 @@ export default async function BudgetPage({
             getBudgetCarryovers(supabase, selectedMonth, selectedYear),
             getUnsettledMonth(supabase, todayMonth, todayYear),
             getSavingsAccounts(supabase),
+            getExpectedIncome(supabase),
         ]);
 
         // Fetch settlement data only when a previous month needs settling
@@ -186,7 +190,9 @@ if (unsettledMonth) {
                     </h1>
 
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                        <ExpectedIncomeCard expectedIncome={expectedIncome} />
+
                         <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm">
                             <h3 className="text-xs lg:text-sm font-medium text-paynes-gray opacity-80 mb-1">
                                 Total Budgeted
@@ -218,6 +224,31 @@ if (unsettledMonth) {
                                 ${totalRemaining.toFixed(2)}
                             </p>
                         </div>
+
+                        {(() => {
+                            const unallocated = unallocatedFromExpected(
+                                expectedIncome?.amount ?? null,
+                                totalEffective
+                            );
+                            if (unallocated == null) return null;
+                            return (
+                                <div className="bg-white p-4 lg:p-6 rounded-lg shadow-sm">
+                                    <h3 className="text-xs lg:text-sm font-medium text-paynes-gray opacity-80 mb-2">
+                                        Unallocated
+                                    </h3>
+                                    <p className={`text-xl lg:text-2xl font-semibold ${
+                                        unallocated >= 0 ? "text-glaucous" : "text-bittersweet"
+                                    }`}>
+                                        {unallocated >= 0
+                                            ? `$${unallocated.toFixed(2)}`
+                                            : `-$${Math.abs(unallocated).toFixed(2)}`}
+                                    </p>
+                                    <p className="text-xs text-paynes-gray opacity-50 mt-0.5">
+                                        {unallocated >= 0 ? "Available to allocate" : "Over budgeted"}
+                                    </p>
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     <BudgetManager
