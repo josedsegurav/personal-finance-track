@@ -9,7 +9,7 @@ import {
     Sheet, SheetClose, SheetContent, SheetDescription,
     SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { upsertBudget, deleteBudget, copyBudgetsFromPreviousMonth } from "@/app/home/budget/actions";
+import { upsertBudget, deleteBudget, copyBudgetsFromPreviousMonth, resetCategoryCarryover } from "@/app/home/budget/actions";
 import { BudgetWithSpent, Category, SavingsAccount, SettlementRow } from "@/app/types";
 import SettlementBanner from "@/components/budget/SettlementBanner";
 import SettlementSheet from "@/components/budget/SettlementSheet";
@@ -62,6 +62,7 @@ export default function BudgetManager({
 }: Props) {
     const router = useRouter();
     const [isCopying, startCopyTransition] = useTransition();
+    const [isResetting, startResetTransition] = useTransition();
     const [settlementOpen, setSettlementOpen] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
     const [selectedCategoryId, setSelectedCategoryId] = useState("");
@@ -111,6 +112,14 @@ export default function BudgetManager({
     function handleCopyPrevious() {
         startCopyTransition(async () => {
             await copyBudgetsFromPreviousMonth(selectedMonth, selectedYear);
+        });
+    }
+
+    // ── Reset carryover ───────────────────────────────────────────────────────
+    function handleResetCarryover(categoryId: number, categoryName: string) {
+        if (!window.confirm(`Reset the carried-over amount for ${categoryName} back to base?`)) return;
+        startResetTransition(async () => {
+            await resetCategoryCarryover(categoryId, selectedMonth, selectedYear);
         });
     }
 
@@ -274,9 +283,22 @@ export default function BudgetManager({
                                             </p>
                                         )}
                                         {hasCarryover && (
-                                            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${badgeClasses}`}>
-                                                {budget.carryover > 0 ? "+" : ""}
-                                                ${budget.carryover.toFixed(2)} carried
+                                            <span className={`inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${badgeClasses}`}>
+                                                <span>
+                                                    {budget.carryover > 0 ? "+" : ""}
+                                                    ${budget.carryover.toFixed(2)} carried
+                                                </span>
+                                                {!isPastMonth && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleResetCarryover(budget.category_id, categoryName)}
+                                                        disabled={isResetting}
+                                                        className="ml-0.5 hover:opacity-70 leading-none disabled:opacity-40"
+                                                        aria-label="Reset carryover"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                )}
                                             </span>
                                         )}
                                         {isCarryoverOnly && !hasCarryover && (

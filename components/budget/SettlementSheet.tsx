@@ -59,7 +59,7 @@ function buildInitialDispositions(
         map[row.category_id] = {
             category_id:               row.category_id,
             delta_amount:              row.delta,
-            disposition:               "same_category",
+            disposition:               "discard",
             target_category_id:        null,
             target_savings_account_id: null,
         };
@@ -186,7 +186,7 @@ export default function SettlementSheet({
                                         Apply difference to
                                     </p>
                                     <select
-                                        value={entry?.disposition ?? "same_category"}
+                                        value={entry?.disposition ?? "discard"}
                                         onChange={(e) =>
                                             updateDisposition(row.category_id, {
                                                 disposition:               e.target.value as CarryoverDisposition,

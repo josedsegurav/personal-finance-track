@@ -180,3 +180,10 @@ export interface SettlementRow {
     delta: number; // effective_amount - spent; positive = surplus, negative = overspent
 }
 
+export interface ExpectedIncome {
+    id: string;
+    user_id: string;
+    amount: number;
+    updated_at: string;
+}
+

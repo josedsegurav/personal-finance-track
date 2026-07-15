@@ -259,6 +259,8 @@ function StepBudget({
     categories,
     budgets,
     onChange,
+    expectedIncome,
+    onExpectedIncomeChange,
     onNext,
     onSkip,
     onBack,
@@ -266,6 +268,8 @@ function StepBudget({
     categories: string[];
     budgets: Record<string, string>;
     onChange: (cat: string, val: string) => void;
+    expectedIncome: string;
+    onExpectedIncomeChange: (val: string) => void;
     onNext: () => void;
     onSkip: () => void;
     onBack: () => void;
@@ -278,6 +282,28 @@ function StepBudget({
             <p className="text-sm text-paynes-gray opacity-60 mb-6">
                 Optionally set a spending limit for each category. Leave blank to skip any you&apos;re not sure about — you can always add them later.
             </p>
+
+            {/* Expected monthly income */}
+            <div className="mb-6 p-4 bg-columbia-blue bg-opacity-10 rounded-lg border border-columbia-blue border-opacity-30">
+                <label className="block text-xs font-medium text-paynes-gray mb-1.5">
+                    Expected monthly income (optional)
+                </label>
+                <p className="text-xs text-paynes-gray opacity-60 mb-3">
+                    Set your expected monthly income to track how your budgets and savings plans align with it.
+                </p>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-paynes-gray">$</span>
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={expectedIncome}
+                        onChange={(e) => onExpectedIncomeChange(e.target.value)}
+                        placeholder="0.00"
+                        className="w-40 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+                    />
+                </div>
+            </div>
 
             <div className="space-y-3">
                 {categories.map((cat) => (
@@ -461,6 +487,7 @@ export default function OnboardingWizard() {
     const [stores, setStores]       = useState<string[]>([]);
     const [budgets, setBudgets]     = useState<Record<string, string>>({});
     const [goals, setGoals]         = useState<OnboardingSavings[]>([{ ...EMPTY_GOAL }]);
+    const [expectedIncome, setExpectedIncome] = useState<string>("");
     const [error, setError]         = useState("");
     const [isPending, startTransition] = useTransition();
 
@@ -502,6 +529,7 @@ export default function OnboardingWizard() {
                     stores,
                     budgets: budgetPayload,
                     savings: savingsPayload,
+                    expectedIncome,
                 });
             } catch (e) {
                 setError((e as Error).message ?? "Something went wrong. Please try again.");
@@ -545,6 +573,8 @@ export default function OnboardingWizard() {
                             categories={categories}
                             budgets={budgets}
                             onChange={handleBudgetChange}
+                            expectedIncome={expectedIncome}
+                            onExpectedIncomeChange={setExpectedIncome}
                             onNext={() => setStep(3)}
                             onSkip={() => setStep(3)}
                             onBack={() => setStep(1)}

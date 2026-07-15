@@ -47,6 +47,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolve category and store names for the prompt (fix: stringify properly)
+    const [allCategories, allStores] = await Promise.all([
+      categories(),
+      stores(),
+    ]);
+    const categoryNames = allCategories.map(c => c.category_name).join(", ");
+    const storeNames = allStores.map(s => s.store_name).join(", ");
+
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -69,6 +77,7 @@ export async function POST(request: NextRequest) {
         }
       ],
       config: {
+        responseMimeType: "application/json",
         systemInstruction: `Analyze this invoice/receipt image following this guidelines:
     Follow these guidelines
 - Extract ALL individual items from the receipt
@@ -78,12 +87,11 @@ export async function POST(request: NextRequest) {
 - "total_expense" should be the final total
 - Provide notes of 50 characters max for every item
 - Be accurate with numbers
-- Return ONLY valid JSON, no markdown or additional text
 - For Walmart store, follow this tax guide: After the item price there is a letter that indicates the tax percentage: D, H = 0%; Y, Z = 5%; A, C, E, J = 12%
 - For Costco store, follow this tax guide: After the item price there is a letter that indicates the tax percentage: G = 5%; P = 7%; GP = 12%, if there is no letter beside the price it is 0%
 - For taxes in other stores, choose closest match: 0%, 5%, or 12%
-- Use the categories from the database to match the category of the item using this list: ${categories}
-- Use the stores from the database to match the store of the item using this list: ${stores}
+- Use the categories from the database to match the category of the item using this list: ${categoryNames}
+- Use the stores from the database to match the store of the item using this list: ${storeNames}
 - If the category is not found, use "other"
 - If the store is not found, use "other"
 
@@ -112,16 +120,7 @@ export async function POST(request: NextRequest) {
     });
 
     const text = result?.text;
-
-    // Clean up response (remove markdown code blocks if present)
-    let cleanedText = text?.trim();
-    if (cleanedText?.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    } else if (cleanedText?.startsWith('```')) {
-      cleanedText = cleanedText.replace(/```\n?/g, '');
-    }
-
-    const extractedData = JSON.parse(cleanedText ?? '{}' as string);
+    const extractedData = JSON.parse(text || '{}');
 
     return NextResponse.json({
       success: true,

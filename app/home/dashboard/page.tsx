@@ -6,6 +6,8 @@ import TrendChart from "@/components/dashboard/TrendChart";
 import CategoryDonut from "@/components/dashboard/CategoryDonut";
 import BudgetStrip from "@/components/dashboard/BudgetStrip";
 import SavingsSnapshot from "@/components/dashboard/SavingsSnapshot";
+import DashboardMonthNav from "@/components/dashboard/DashboardMonthNav";
+import RecentTransactionsCompact from "@/components/dashboard/RecentTransactionsCompact";
 import {
     getIncome,
     getExpense,
@@ -19,20 +21,30 @@ import {
     getCategories,
     getStores,
     getBudgetCarryovers,
+    getExpectedIncome,
+    getUnsettledMonth,
 } from "@/hooks/supabaseQueries";
 import Link from "next/link";
 import { Budget, Category, Expense, Income, SavingsPlan, BudgetCarryover } from "@/app/types";
 import { redirect } from "next/navigation";
 
-export default async function Page() {
+export default async function Page({
+    searchParams,
+}: {
+    searchParams: Promise<{ month?: string; year?: string }>;
+}) {
     const supabase = await createClient();
     const user = await getUser(supabase);
 
-    const demoAccount = user.email === "lacimaonline@gmail.com";
+    const params = await searchParams;
+    const today = new Date();
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
 
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear  = currentDate.getFullYear();
+    const selectedMonth = params.month != null ? Number(params.month) : todayMonth;
+    const selectedYear = params.year != null ? Number(params.year) : todayYear;
+
+    const demoAccount = user.email === "lacimaonline@gmail.com";
 
     // ── Fetch all data in parallel ──────────────────────────────────────────
     const [
@@ -46,19 +58,23 @@ export default async function Page() {
         budgets,
         categories,
         stores,
-        carryovers,           // ← new
+        carryovers,
+        expectedIncome,
+        unsettledMonth,
     ] = await Promise.all([
         getIncome(supabase),
         getExpense(supabase),
         getPurchases(supabase),
         getSavingsAccounts(supabase),
         getAllTimeSavingsContributions(supabase),
-        getSavingsPlans(supabase, currentMonth, currentYear),
+        getSavingsPlans(supabase, selectedMonth, selectedYear),
         getSavingsAllPlans(supabase),
-        getBudgets(supabase, currentMonth, currentYear),
+        getBudgets(supabase, selectedMonth, selectedYear),
         getCategories(supabase),
         getStores(supabase),
-        getBudgetCarryovers(supabase, currentMonth, currentYear),  // ← new
+        getBudgetCarryovers(supabase, selectedMonth, selectedYear),
+        getExpectedIncome(supabase),
+        getUnsettledMonth(supabase, todayMonth, todayYear),
     ]);
 
     if (categories.length === 0 || stores.length === 0) {
@@ -85,14 +101,14 @@ export default async function Page() {
     }
 
     // ── Current month totals ─────────────────────────────────────────────────
-    const monthIncome = forMonth(income ?? [], "income_date", currentMonth, currentYear)
+    const monthIncome = forMonth(income ?? [], "income_date", selectedMonth, selectedYear)
         .reduce((s, i) => s + parseFloat((i as unknown as Income).net_income as unknown as string), 0);
 
-    const monthExpenses = forMonth(expenses ?? [], "expense_date", currentMonth, currentYear)
+    const monthExpenses = forMonth(expenses ?? [], "expense_date", selectedMonth, selectedYear)
         .reduce((s, e) => s + parseFloat((e as unknown as Expense).total_expense), 0);
 
-    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-    const prevYear  = currentMonth === 0 ? currentYear - 1 : currentYear;
+    const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+    const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
 
     const prevIncome   = forMonth(income   ?? [], "income_date",  prevMonth, prevYear).reduce((s, i) => s + parseFloat((i as unknown as Income).net_income as unknown as string),    0);
     const prevExpenses = forMonth(expenses ?? [], "expense_date", prevMonth, prevYear).reduce((s, e) => s + parseFloat((e as unknown as Expense).total_expense as unknown as string),  0);
@@ -104,7 +120,28 @@ export default async function Page() {
     // ── Savings ──────────────────────────────────────────────────────────────
     const totalSavedAllTime = (allTimeContribs ?? []).reduce((s, c) => s + c.amount, 0);
     const plannedSavingsThisMonth = (savingsPlansThisMonth ?? []).reduce((s, p) => s + p.planned_amount, 0);
-    const savingsRate = monthIncome > 0 ? Math.round((plannedSavingsThisMonth / monthIncome) * 100) : 0;
+    const expectedAmt = expectedIncome?.amount ?? 0;
+    const savingsDenominator = expectedAmt > 0 ? expectedAmt : monthIncome;
+    const savingsRate = savingsDenominator > 0 ? Math.round((plannedSavingsThisMonth / savingsDenominator) * 100) : 0;
+    const savingsBasis = (expectedIncome?.amount ?? 0) > 0 ? "expected income" : "actual income";
+
+    // ── Recent transactions (compact) ────────────────────────────────────────
+    const recentTransactionRows = [
+        ...(income ?? []).map(i => ({
+            id: "income-" + i.id,
+            date: (i as unknown as Record<string, string>).income_date,
+            description: (i as unknown as Record<string, string>).description ?? "",
+            type: "income" as const,
+            amount: parseFloat((i as unknown as Income).net_income as unknown as string),
+        })),
+        ...(expenses ?? []).map(e => ({
+            id: "expense-" + e.id,
+            date: (e as unknown as Record<string, string>).expense_date,
+            description: (e as unknown as Record<string, string>).description ?? "",
+            type: "expense" as const,
+            amount: parseFloat((e as unknown as Expense).total_expense),
+        })),
+    ];
 
     // ── Purchases this month (for budget + donut) ────────────────────────────
     // Note: the Supabase join returns `expenses` as a single object, not an array.
@@ -113,7 +150,7 @@ export default async function Page() {
         const dateStr = expense?.expense_date;
         if (!dateStr) return false;
         const d = parseLocalDate(dateStr);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
     });
 
     const spentByCategoryId: Record<number, number> = {};
@@ -160,6 +197,8 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
     };
 }).sort((a, b) => b.percentage - a.percentage);
 
+const worstCategory = budgetStripData[0];
+
     // ── Category donut ────────────────────────────────────────────────────────
     const DONUT_COLORS = ["#577399","#BDD5EA","#22c55e","#f59e0b","#a78bfa","#f97316","#14b8a6","#ec4899"];
     const catTotals: Record<string, number> = {};
@@ -180,7 +219,7 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
     const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const trendData = Array.from({ length: 6 }, (_, idx) => {
         const offset = 5 - idx;
-        const d = new Date(currentYear, currentMonth - offset, 1);
+        const d = new Date(selectedYear, selectedMonth - offset, 1);
         const m = d.getMonth();
         const y = d.getFullYear();
         return {
@@ -216,7 +255,28 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
         <>
             <SidebarNav activeMenu="dashboard" />
             <div className="flex-1 p-4 lg:p-8 pt-20 lg:pt-8">
-                <h1 className="text-xl lg:text-2xl font-semibold text-paynes-gray mb-6">Dashboard</h1>
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-xl lg:text-2xl font-semibold text-paynes-gray">Dashboard</h1>
+                    <DashboardMonthNav selectedMonth={selectedMonth} selectedYear={selectedYear} />
+                </div>
+
+                {/* ── Unsettled month banner ──────────────────────────────────── */}
+                {unsettledMonth && (
+                    <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 mb-6">
+                        <p className="text-sm text-amber-800">
+                            <span className="font-semibold">
+                                {["January","February","March","April","May","June","July","August","September","October","November","December"][unsettledMonth.month]} {unsettledMonth.year}
+                            </span>{" "}
+                            hasn&apos;t been settled yet.
+                        </p>
+                        <Link
+                            href="/home/budget"
+                            className="text-sm font-medium text-amber-800 underline hover:no-underline shrink-0"
+                        >
+                            Review now →
+                        </Link>
+                    </div>
+                )}
 
                 {/* ── Summary Cards ─────────────────────────────────────────── */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
@@ -231,10 +291,31 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
                                 </svg>
                             </div>
                         </div>
-                        <p className="text-lg lg:text-xl font-bold text-paynes-gray">${monthIncome.toFixed(2)}</p>
+                        <p className="text-lg lg:text-xl font-bold text-paynes-gray">
+                            ${monthIncome.toFixed(2)}
+                            {expectedIncome?.amount != null && expectedIncome.amount > 0 && (
+                                <span className="text-xs font-normal text-paynes-gray opacity-50 ml-2">
+                                    of ${expectedIncome.amount.toFixed(2)} expected
+                                </span>
+                            )}
+                        </p>
                         <p className={`text-xs mt-1 font-medium ${incomeDiff >= 0 ? "text-green-500" : "text-bittersweet"}`}>
                             {incomeDiff >= 0 ? "▲" : "▼"} {Math.abs(incomeDiff).toFixed(0)}% vs last month
                         </p>
+                        {(() => {
+                            const expected = expectedIncome?.amount;
+                            if (expected == null || expected <= 0) return null;
+                            const extra = Math.max(0, monthIncome - expected);
+                            if (extra <= 0) return null;
+                            return (
+                                <p className="text-xs mt-1 text-glaucous">
+                                    Extra: ${extra.toFixed(2)} available &mdash;{" "}
+                                    <Link href="/home/savings" className="underline hover:no-underline">
+                                        Add to a goal →
+                                    </Link>
+                                </p>
+                            );
+                        })()}
                     </div>
 
                     {/* Expenses */}
@@ -266,8 +347,8 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
                         <p className={`text-lg lg:text-xl font-bold ${balance >= 0 ? "text-paynes-gray" : "text-bittersweet"}`}>
                             ${balance.toFixed(2)}
                         </p>
-                        <p className={`text-xs mt-1 font-medium ${balance >= 0 ? "text-glaucous" : "text-bittersweet"}`}>
-                            {balance >= 0 ? "Positive" : "Negative"} balance
+                        <p className="text-xs mt-1 font-medium text-paynes-gray opacity-60">
+                            Income − Expenses
                         </p>
                     </div>
 
@@ -283,7 +364,7 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
                         </div>
                         <p className="text-lg lg:text-xl font-bold text-paynes-gray">${totalSavedAllTime.toFixed(2)}</p>
                         <p className="text-xs mt-1 font-medium text-glaucous">
-                            {savingsAccounts?.length ?? 0} active goal{(savingsAccounts?.length ?? 0) !== 1 ? "s" : ""}
+                            All-time &middot; {savingsAccounts?.length ?? 0} active goal{(savingsAccounts?.length ?? 0) !== 1 ? "s" : ""}
                         </p>
                     </div>
 
@@ -297,11 +378,21 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
                                 </svg>
                             </div>
                         </div>
-                        <p className={`text-lg lg:text-xl font-bold ${savingsRate >= 20 ? "text-green-500" : savingsRate >= 10 ? "text-yellow-500" : plannedSavingsThisMonth === 0 ? "text-paynes-gray opacity-40" : "text-bittersweet"}`}>
-                            {plannedSavingsThisMonth === 0 ? "—" : `${savingsRate}%`}
+                        <p className={`text-lg lg:text-xl font-bold ${savingsRate >= 20 ? "text-green-500" : savingsRate >= 10 ? "text-yellow-500" : plannedSavingsThisMonth === 0 || savingsDenominator === 0 ? "text-paynes-gray opacity-40" : "text-bittersweet"}`}>
+                            {plannedSavingsThisMonth === 0 || savingsDenominator === 0 ? "—" : `${savingsRate}%`}
                         </p>
-                        <p className="text-xs mt-1 text-paynes-gray opacity-50">
-                            {savingsRate >= 20 ? "Excellent" : savingsRate >= 10 ? "On track" : plannedSavingsThisMonth === 0 ? "No plan set" : "Below 10%"}
+                        <p className="text-xs mt-1 text-paynes-gray">
+                            <span className={savingsRate >= 20 ? "text-green-500" : savingsRate >= 10 ? "text-yellow-500" : plannedSavingsThisMonth === 0 || savingsDenominator === 0 ? "opacity-50" : "text-bittersweet"}>
+                                {plannedSavingsThisMonth === 0 || savingsDenominator === 0
+                                    ? "No plan set"
+                                    : savingsRate >= 20
+                                        ? "Excellent"
+                                        : savingsRate >= 10
+                                            ? "On track"
+                                            : "Below 10%"
+                                }
+                            </span>
+                            <span className="opacity-40 ml-1">of {savingsBasis}</span>
                         </p>
                     </div>
 
@@ -336,28 +427,45 @@ const budgetStripData = (budgets as unknown as Budget[]).map(b => {
                                 <p className="text-xs mt-1 text-paynes-gray opacity-50">
                                     ${totalBudgetSpent.toFixed(0)} of ${totalBudgeted.toFixed(0)}
                                 </p>
+                                {worstCategory && (
+                                    <Link
+                                        href="/home/budget"
+                                        className="text-xs mt-1 text-bittersweet hover:underline block"
+                                    >
+                                        Worst: {worstCategory.category_name} ({Math.round(worstCategory.percentage)}%)
+                                    </Link>
+                                )}
                             </>
                         )}
                     </div>
                 </div>
 
-                {/* ── Charts row ─────────────────────────────────────────────── */}
+                {/* ── Row A: TrendChart + RecentTransactionsCompact ──────────── */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
                     <div className="lg:col-span-3">
                         <TrendChart trendData={trendData} />
                     </div>
                     <div className="lg:col-span-2">
-                        <CategoryDonut categoryData={categoryData} totalSpent={totalCategorySpend} />
+                        <RecentTransactionsCompact transactions={recentTransactionRows} />
                     </div>
                 </div>
 
-                {/* ── Budget strip + Savings snapshot ────────────────────────── */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                    <BudgetStrip budgets={budgetStripData} />
+                {/* ── Row B: CategoryDonut + BudgetStrip ─────────────────────── */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+                    <div className="lg:col-span-2">
+                        <CategoryDonut categoryData={categoryData} totalSpent={totalCategorySpend} />
+                    </div>
+                    <div className="lg:col-span-3">
+                        <BudgetStrip budgets={budgetStripData} />
+                    </div>
+                </div>
+
+                {/* ── Row C: SavingsSnapshot full width ──────────────────────── */}
+                <div className="mb-6">
                     <SavingsSnapshot accounts={savingsSnapshotData} totalCount={savingsAccounts?.length ?? 0} />
                 </div>
 
-                {/* ── Recent Transactions ─────────────────────────────────────── */}
+                {/* ── Recent Transactions (full list) ─────────────────────────── */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                     <Transactions
                         totalExpenses={monthExpenses}

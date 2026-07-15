@@ -7,6 +7,7 @@ export interface PurchaseItem {
   purchaseAmount: string;
   taxes: string;
   notes: string;
+  aiSuggestedCategory?: string;
 }
 
 export const TAX_OPTIONS = ["0%", "5%", "12%"];
@@ -80,7 +81,11 @@ export default function PurchaseItemCard({
             name="category"
             value={purchase.category}
             onChange={(e) => onChange(index, e)}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent ${
+              purchase.category === "" && purchase.aiSuggestedCategory
+                ? "border-amber-300 bg-amber-50"
+                : "border-gray-200"
+            }`}
           >
             <option disabled value="">
               Select a category
@@ -91,6 +96,11 @@ export default function PurchaseItemCard({
               </option>
             ))}
           </select>
+          {purchase.category === "" && purchase.aiSuggestedCategory && (
+            <p className="text-xs text-amber-700 mt-1">
+              AI suggested: &ldquo;{purchase.aiSuggestedCategory}&rdquo; &mdash; please select the closest match
+            </p>
+          )}
 </div>
 
         {/* Amount */}
