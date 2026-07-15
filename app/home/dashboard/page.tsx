@@ -25,7 +25,7 @@ import {
     getUnsettledMonth,
 } from "@/hooks/supabaseQueries";
 import Link from "next/link";
-import { Budget, Category, Expense, Income, SavingsPlan, BudgetCarryover, ExpectedIncome } from "@/app/types";
+import { Budget, Category, Expense, Income, SavingsPlan, BudgetCarryover } from "@/app/types";
 import { redirect } from "next/navigation";
 
 export default async function Page({

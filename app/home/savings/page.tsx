@@ -10,7 +10,7 @@ import {
     getAllTimeSavingsContributions,
     getExpectedIncome,
 } from "@/hooks/supabaseQueries";
-import { SavingsAccountWithPlan, SavingsPlan, ExpectedIncome } from "@/app/types";
+import { SavingsAccountWithPlan, SavingsPlan } from "@/app/types";
 
 export default async function SavingsPage() {
     const supabase = await createClient();
