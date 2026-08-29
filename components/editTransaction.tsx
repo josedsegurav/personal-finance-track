@@ -9,11 +9,11 @@ import { Category, ExpenseDetailed, Income, PurchaseDetailed, Store } from "@/ap
 
 interface EditTransactionProps {
   table: string;
-  income: Income;
-  expense: ExpenseDetailed;
-  stores: Array<Store>;
-  categories: Array<Category>;
-  purchase: PurchaseDetailed;
+  income?: Income;
+  expense?: ExpenseDetailed;
+  stores?: Array<Store>;
+  categories?: Array<Category>;
+  purchase?: PurchaseDetailed;
 }
 
 export default function EditTransaction(props: EditTransactionProps) {
@@ -24,9 +24,9 @@ export default function EditTransaction(props: EditTransactionProps) {
           <Pencil size={18} />
         </Button>
       </SheetTrigger>
-      {props.table === "income" && <EditIncome income={props.income} />}
-      {props.table === "expense" && <EditExpense expense={props.expense} stores={props.stores} />}
-      {props.table === "purchase" && <EditPurchase purchase={props.purchase} categories={props.categories} stores={props.stores} />}
+      {props.table === "income" && props.income && <EditIncome income={props.income} />}
+      {props.table === "expense" && props.expense && props.stores && <EditExpense expense={props.expense} stores={props.stores} />}
+      {props.table === "purchase" && props.purchase && props.categories && props.stores && <EditPurchase purchase={props.purchase} categories={props.categories} stores={props.stores} />}
     </Sheet>
   );
 }

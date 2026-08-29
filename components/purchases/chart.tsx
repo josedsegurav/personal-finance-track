@@ -63,13 +63,15 @@ export default function Chart(props: ChartProps) {
   useEffect(() => {
     const groupedData = purchases.reduce(
       (acc: Record<string, GroupedData>, purchase) => {
-        if (!acc[purchase.categories.category_name]) {
-          acc[purchase.categories.category_name] = {
-            category: purchase.categories.category_name,
+        const catVal: unknown = purchase.categories;
+        const categoryName = Array.isArray(catVal) ? (catVal[0] as { category_name: string })?.category_name : (catVal as { category_name: string })?.category_name;
+        if (!acc[categoryName]) {
+          acc[categoryName] = {
+            category: categoryName,
             amount: 0,
           };
         }
-        acc[purchase.categories.category_name].amount += (((purchase.taxes / 100) * purchase.amount) + purchase.amount);
+        acc[categoryName].amount += (((purchase.taxes / 100) * purchase.amount) + purchase.amount);
         return acc;
       },
       {} as Record<string, GroupedData>
@@ -110,7 +112,7 @@ export default function Chart(props: ChartProps) {
         <CardHeader className="items-center pb-4 px-4 lg:px-6">
           <CardTitle className="text-lg lg:text-xl">Expense Breakdown</CardTitle>
           <CardDescription className="text-center text-sm">
-            {months[filters.month]} {filters.year} - {filters.category === "all" ? "All Categories" : purchases[0]?.categories.category_name}
+            {months[filters.month]} {filters.year} - {filters.category === "all" ? "All Categories" : (() => { const v: unknown = purchases[0]?.categories; return Array.isArray(v) ? (v[0] as { category_name: string })?.category_name : (v as { category_name: string })?.category_name; })()}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-4 px-4 lg:px-6">

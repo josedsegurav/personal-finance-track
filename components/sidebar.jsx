@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowDownRight,
-  ArrowUpRight,
   Home,
   ShoppingCart,
   PlusCircle,
@@ -13,6 +12,8 @@ import {
   X,
   Wallet,
   PiggyBank,
+  HandCoins,
+  Settings,
 } from "lucide-react";
 import { signOutAction } from "@/app/actions";
 
@@ -35,16 +36,10 @@ export default function SidebarNav(props) {
       label: "Income",
     },
     {
-      id: "expenses",
-      href: "/home/expenses",
-      icon: ArrowUpRight,
-      label: "Expenses",
-    },
-    {
-      id: "purchases",
-      href: "/home/purchases",
+      id: "transactions",
+      href: "/home/transactions",
       icon: ShoppingCart,
-      label: "Purchases",
+      label: "Transactions",
     },
     {
       id: "budget",
@@ -64,6 +59,18 @@ export default function SidebarNav(props) {
       icon: PlusCircle,
       label: "Add Data",
     },
+    {
+      id: "loans",
+      href: "/home/loans",
+      icon: HandCoins,
+      label: "Loans",
+    },
+    {
+      id: "settings",
+      href: "/home/settings",
+      icon: Settings,
+      label: "Settings",
+    },
   ];
 
   return (
@@ -71,7 +78,7 @@ export default function SidebarNav(props) {
       {/* Mobile toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 p-2 rounded-lg bg-white shadow-md z-50"
+        className="fixed top-4 left-4 p-2 rounded-lg bg-white shadow-md z-50"
         aria-label="Toggle sidebar"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
