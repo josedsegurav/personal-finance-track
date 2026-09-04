@@ -197,7 +197,7 @@ export interface UserSettings {
 
 export interface LoanExtra {
     label: string;
-    amount: number;
+    amount: number | string | null;
 }
 
 export interface Loan {

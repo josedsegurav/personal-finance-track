@@ -47,9 +47,15 @@ function rowToEditable(r: Partial<LoanScheduledPayment>): EditableRow {
 }
 
 function editableToRow(e: EditableRow): Partial<LoanScheduledPayment> {
-    const extras: Array<{ label: string; amount: number }> = Object.entries(e.extras)
+    const extras: Array<{ label: string; amount: number | string | null }> = Object.entries(e.extras)
         .filter(([, v]) => v !== "")
-        .map(([label, amount]) => ({ label, amount: parseFloat(amount) || 0 }));
+        .map(([label, raw]) => {
+            const t = raw.trim();
+            const normalized = t.replace(/,/g, "");
+            const num = Number(normalized);
+            const isNumeric = t !== "" && !Number.isNaN(num) && /^-?\d+(\.\d+)?$/.test(normalized);
+            return { label, amount: isNumeric ? num : t };
+        });
 
     return {
         due_date: e.due_date,
@@ -212,8 +218,8 @@ export default function ScheduleGrid({ schedule, onChange }: Props) {
                             {managedExtras.map((label) => (
                                 <td key={label} className="px-1 py-1 border border-gray-200">
                                     <input
-                                        type="number"
-                                        step="0.01"
+                                        type="text"
+                                        inputMode="decimal"
                                         value={row.extras[label] ?? ""}
                                         onChange={(e) =>
                                             updateRow(i, `extras:${label}`, e.target.value)

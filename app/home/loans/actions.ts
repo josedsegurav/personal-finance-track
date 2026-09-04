@@ -170,6 +170,25 @@ export async function logActualPayment(
     revalidatePath(`/home/loans/${loanId}`);
 }
 
+export async function deleteActualPaymentsForScheduledPayment(
+    loanId: string,
+    scheduledPaymentId: string
+) {
+    const supabase = await createClient();
+    const user = await getUser(supabase);
+
+    const { error } = await supabase
+        .from("loan_actual_payments")
+        .delete()
+        .eq("scheduled_payment_id", scheduledPaymentId)
+        .eq("loan_id", loanId)
+        .eq("user_id", user.id);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath(`/home/loans/${loanId}`);
+}
+
 export async function saveScenario(
     loanId: string,
     scenario: {

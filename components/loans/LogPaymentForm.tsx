@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { logActualPayment } from "@/app/home/loans/actions";
 import type { LoanScheduledPayment } from "@/app/types";
 import InlineNotification from "@/components/ui/InlineNotification";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { parseLocalDate } from "@/lib/dateUtils";
 
 interface Props {
     loanId: string;
     loanCurrency: string;
     baseCurrency: string;
-    futureSchedule: Pick<LoanScheduledPayment, "id" | "due_date" | "total_payment">[];
+    unpaidSchedule: Pick<LoanScheduledPayment, "id" | "due_date" | "total_payment">[];
     onSuccess?: () => void;
 }
 
@@ -18,9 +20,10 @@ export default function LogPaymentForm({
     loanId,
     loanCurrency,
     baseCurrency,
-    futureSchedule,
+    unpaidSchedule,
     onSuccess,
 }: Props) {
+    const router = useRouter();
     const sameCurrency = loanCurrency === baseCurrency;
 
     const [scheduledPaymentId, setScheduledPaymentId] = useState("");
@@ -64,6 +67,7 @@ export default function LogPaymentForm({
             setNotes("");
             setScheduledPaymentId("");
             setLinkExpense(false);
+            router.refresh();
             onSuccess?.();
         } catch {
             setMessage({ type: "error", text: "Failed to log payment" });
@@ -85,7 +89,7 @@ export default function LogPaymentForm({
                         value={scheduledPaymentId}
                         onChange={(e) => {
                             setScheduledPaymentId(e.target.value);
-                            const selected = futureSchedule.find(
+                            const selected = unpaidSchedule.find(
                                 (s) => s.id === e.target.value
                             );
                             if (selected?.total_payment) {
@@ -95,11 +99,14 @@ export default function LogPaymentForm({
                         className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
                     >
                         <option value="">Unscheduled / Extra payment</option>
-                        {futureSchedule.map((s) => (
-                            <option key={s.id} value={s.id}>
-                                {s.due_date} — {s.total_payment != null ? formatCurrency(s.total_payment, loanCurrency) : "-"}
-                            </option>
-                        ))}
+                        {unpaidSchedule.map((s) => {
+                            const overdue = parseLocalDate(s.due_date) < new Date(new Date().toDateString());
+                            return (
+                                <option key={s.id} value={s.id}>
+                                    {s.due_date}{overdue ? " (overdue)" : ""} — {s.total_payment != null ? formatCurrency(s.total_payment, loanCurrency) : "-"}
+                                </option>
+                            );
+                        })}
                     </select>
                     {scheduledPaymentId && (
                         <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-columbia-blue bg-opacity-20 text-paynes-gray rounded">

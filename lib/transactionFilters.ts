@@ -60,6 +60,7 @@ export function filterExpenses(
   return expenses.filter((e) => {
     const d = parseLocalDate(e.expense_date);
     if (f.year !== "all" && d.getFullYear() !== Number(f.year)) return false;
+    if (f.month !== "all" && d.getMonth() !== Number(f.month)) return false;
     const store = getExpenseStore(e);
     if (f.store !== "all" && String(store?.id) !== f.store) return false;
     if (!matchesSearch([e.description, store?.store_name, e.payment_method], f.search))

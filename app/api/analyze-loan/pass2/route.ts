@@ -33,7 +33,7 @@ Return ONLY this JSON shape (no markdown, no extra text):
     "term_months": "total term in months as number or null",
     "start_date": "start date in YYYY-MM-DD format or null",
     "currency": "3-letter currency code",
-    "extras": [{"label": "any header-level extra field name", "amount": number}]
+    "extras": [{"label": "any header-level extra field name", "amount": number | string | null}]
   },
   "schedule": [
     {
@@ -42,7 +42,7 @@ Return ONLY this JSON shape (no markdown, no extra text):
       "interest": "interest portion as number or null",
       "total_payment": "total payment amount as number or null",
       "balance_after": "remaining balance after payment as number or null",
-      "extras": [{"label": "extra column name", "amount": number}]
+      "extras": [{"label": "extra column name", "amount": number | string | null}]
     }
   ],
   "flags": {
@@ -58,7 +58,7 @@ Canonical field mapping rules:
 - Map "interés", "interes", "interest" → interest
 - Map "saldo", "balance", "remaining" → balance_after
 - Map "fecha", "date", "vencimiento", "due" → due_date
-- Any column that doesn't match these goes into extras as {"label": "original header", "amount": value}
+- Any column that doesn't match these goes into extras as {"label": "original header", "amount": value} where value is number if monetary, otherwise original string marker (e.g. "POR VENCER", "-") or null if empty. Do not coerce non-numeric markers to 0.
 
 Number parsing: use the detected number format (${pass1.number_format}) to correctly parse values.
 Date parsing: use the detected date format (${pass1.date_format}) to produce YYYY-MM-DD output.

@@ -11,6 +11,8 @@ import {
 import BalanceChart from "@/components/loans/BalanceChart";
 import LogPaymentForm from "@/components/loans/LogPaymentForm";
 import EditLoanFields from "@/components/loans/EditLoanFields";
+import PaidStatusCell from "@/components/loans/PaidStatusCell";
+import FullScheduleTable from "@/components/loans/FullScheduleTable";
 import { formatCurrency } from "@/lib/formatCurrency";
 
 export default async function LoanDetailPage({
@@ -39,15 +41,36 @@ export default async function LoanDetailPage({
         return new Date(p.due_date) >= new Date() && (p.balance_after ?? 0) > 0;
     });
 
-    const futureSchedule = schedule.filter(
-        (p) => new Date(p.due_date) >= new Date()
-    );
-
     const paidScheduledIds = new Set(
         actualPayments
             .filter((a) => a.scheduled_payment_id)
             .map((a) => a.scheduled_payment_id)
     );
+
+    const actualPaymentIdsByScheduledId = new Map<string, string[]>();
+    actualPayments.forEach((a) => {
+        if (!a.scheduled_payment_id) return;
+        const existing = actualPaymentIdsByScheduledId.get(a.scheduled_payment_id) ?? [];
+        existing.push(a.id);
+        actualPaymentIdsByScheduledId.set(a.scheduled_payment_id, existing);
+    });
+
+    // All schedule rows without a linked actual payment yet — past-due and
+    // future — so the user can catch up on periods that have already passed.
+    const unpaidSchedule = schedule.filter((p) => !paidScheduledIds.has(p.id));
+
+    // Union of extra line-item labels across the whole schedule, so scenario-
+    // specific charges (insurance, fees, taxes, etc.) get their own column
+    // even if they only appear on some rows.
+    const extraLabels = Array.from(
+        new Set(schedule.flatMap((p) => p.extras?.map((e: { label: string }) => e.label) ?? []))
+    ).sort((a, b) => a.localeCompare(b));
+
+    const totalInterest = schedule.reduce((sum: number, p) => sum + (typeof p.interest === "number" ? p.interest : 0), 0);
+    const totalNumericExtras = schedule.reduce(
+        (sum: number, p) => sum + (p.extras?.reduce((a: number, e: { amount: number | string | null }) => a + (typeof e.amount === "number" ? e.amount : 0), 0) ?? 0),
+        0
+    ) + (loan.extras ?? []).reduce((s: number, e: { amount: number | string | null }) => s + (typeof e.amount === "number" ? e.amount : 0), 0);
 
     const actualBalances = actualPayments.map((a) => ({
         date: a.paid_date,
@@ -137,6 +160,18 @@ export default async function LoanDetailPage({
                                 </div>
                             )}
                             <div>
+                                <p className="text-xs text-paynes-gray opacity-60">Total Interest</p>
+                                <p className="font-semibold text-paynes-gray">
+                                    {formatCurrency(totalInterest, loan.currency)}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-paynes-gray opacity-60">Total Extras</p>
+                                <p className="font-semibold text-paynes-gray">
+                                    {formatCurrency(totalNumericExtras, loan.currency)}
+                                </p>
+                            </div>
+                            <div>
                                 <p className="text-xs text-paynes-gray opacity-60">Schedule</p>
                                 <p className="font-semibold text-paynes-gray">
                                     {schedule.length} payments
@@ -207,7 +242,7 @@ export default async function LoanDetailPage({
                             loanId={loan.id}
                             loanCurrency={loan.currency}
                             baseCurrency={baseCurrency}
-                            futureSchedule={futureSchedule.map((p) => ({
+                            unpaidSchedule={unpaidSchedule.map((p) => ({
                                 id: p.id,
                                 due_date: p.due_date,
                                 total_payment: p.total_payment,
@@ -243,11 +278,20 @@ export default async function LoanDetailPage({
                                                         {p.total_payment != null ? formatCurrency(p.total_payment, loan.currency) : "-"}
                                                     </td>
                                                     <td className="px-2 py-1 border border-gray-200 text-center">
-                                                        {isPaid ? (
-                                                            <span className="text-green-600">✓</span>
-                                                        ) : (
-                                                            <span className="text-paynes-gray opacity-30">—</span>
-                                                        )}
+                                                        <PaidStatusCell
+                                                            loanId={loan.id}
+                                                            loanCurrency={loan.currency}
+                                                            baseCurrency={baseCurrency}
+                                                            scheduledPayment={{
+                                                                id: p.id,
+                                                                due_date: p.due_date,
+                                                                total_payment: p.total_payment,
+                                                            }}
+                                                            isPaid={isPaid}
+                                                            linkedActualPaymentIds={
+                                                                actualPaymentIdsByScheduledId.get(p.id) ?? []
+                                                            }
+                                                        />
                                                     </td>
                                                 </tr>
                                             );
@@ -258,52 +302,15 @@ export default async function LoanDetailPage({
                         </div>
                     </div>
 
-                    {/* Full Schedule */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 className="text-sm font-medium text-paynes-gray mb-3">
-                            Full Schedule ({schedule.length} payments)
-                        </h2>
-                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                            <table className="w-full text-xs border-collapse">
-                                <thead className="sticky top-0 bg-white">
-                                    <tr className="bg-gray-50">
-                                        <th className="px-2 py-1.5 text-left text-paynes-gray font-medium border border-gray-200">#</th>
-                                        <th className="px-2 py-1.5 text-left text-paynes-gray font-medium border border-gray-200">Due Date</th>
-                                        <th className="px-2 py-1.5 text-right text-paynes-gray font-medium border border-gray-200">Capital</th>
-                                        <th className="px-2 py-1.5 text-right text-paynes-gray font-medium border border-gray-200">Interest</th>
-                                        <th className="px-2 py-1.5 text-right text-paynes-gray font-medium border border-gray-200">Total</th>
-                                        <th className="px-2 py-1.5 text-right text-paynes-gray font-medium border border-gray-200">Balance</th>
-                                        <th className="px-2 py-1.5 text-center text-paynes-gray font-medium border border-gray-200">Paid</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {schedule.map((p, i) => {
-                                        const isPaid = paidScheduledIds.has(p.id);
-                                        return (
-                                            <tr
-                                                key={p.id}
-                                                className={`hover:bg-gray-50 ${isPaid ? "bg-green-50" : ""}`}
-                                            >
-                                                <td className="px-2 py-1 border border-gray-200 text-paynes-gray opacity-60">{i + 1}</td>
-                                                <td className="px-2 py-1 border border-gray-200">{p.due_date}</td>
-                                                <td className="px-2 py-1 border border-gray-200 text-right">{p.capital?.toFixed(2) ?? "-"}</td>
-                                                <td className="px-2 py-1 border border-gray-200 text-right">{p.interest?.toFixed(2) ?? "-"}</td>
-                                                <td className="px-2 py-1 border border-gray-200 text-right font-medium">{p.total_payment?.toFixed(2) ?? "-"}</td>
-                                                <td className="px-2 py-1 border border-gray-200 text-right">{p.balance_after?.toFixed(2) ?? "-"}</td>
-                                                <td className="px-2 py-1 border border-gray-200 text-center">
-                                                    {isPaid ? (
-                                                        <span className="text-green-600">✓</span>
-                                                    ) : (
-                                                        <span className="text-paynes-gray opacity-30">—</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <FullScheduleTable
+                        loanId={loan.id}
+                        loanCurrency={loan.currency}
+                        baseCurrency={baseCurrency}
+                        schedule={schedule}
+                        extraLabels={extraLabels}
+                        actualPaymentIdsByScheduledId={actualPaymentIdsByScheduledId}
+                        paidScheduledIds={paidScheduledIds}
+                    />
                 </div>
             </div>
         </>
