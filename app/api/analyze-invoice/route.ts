@@ -17,8 +17,8 @@ const stores = async () => {
   return data;
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB to match loan flow
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,12 +27,13 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: 'No image file provided' },
+        { error: 'No file provided' },
         { status: 400 }
       );
     }
 
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    const isPdfByExtension = file.name.toLowerCase().endsWith('.pdf');
+    if (!ALLOWED_MIME_TYPES.includes(file.type) && !isPdfByExtension) {
       return NextResponse.json(
         { error: `Invalid file type. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}` },
         { status: 400 }
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
       ],
       config: {
         responseMimeType: "application/json",
-        systemInstruction: `Analyze this invoice/receipt image following this guidelines:
+        systemInstruction: `Analyze this invoice/receipt image or PDF document following this guidelines:
     Follow these guidelines
 - Extract ALL individual items from the receipt
 - If payment method is unclear, use "credit card"

@@ -36,22 +36,30 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
         const file = e.target.files?.[0];
 
         // Clear previous state
+        if (preview && fileImg?.type === 'application/pdf') {
+            URL.revokeObjectURL(preview);
+        }
         setError(null);
         setPreview(null);
         setFileImg(null);
 
         if (!file) return;
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            setError('Please upload an image file (JPG, PNG, WEBP)');
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+        const isAllowedMime = allowedMimeTypes.includes(file.type);
+        const isPdfByExtension = file.name.toLowerCase().endsWith('.pdf');
+        const isImageByMime = file.type.startsWith('image/');
+
+        // Validate file type - support images and PDF
+        if (!isAllowedMime && !isPdfByExtension && !isImageByMime) {
+            setError('Please upload an image or PDF file (JPG, PNG, WEBP, PDF)');
             e.target.value = ''; // Clear the input
             return;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Image size should be less than 5MB');
+        // Validate file size (max 15MB to match loan flow)
+        if (file.size > 15 * 1024 * 1024) {
+            setError('File size should be less than 15MB');
             e.target.value = ''; // Clear the input
             return;
         }
@@ -59,27 +67,34 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
         setFileImg(file);
         setIsUploading(true);
 
-        // Create preview
-        const reader = new FileReader();
-
-        reader.onloadend = () => {
-            setPreview(reader.result as string);
+        // Create preview - PDF uses object URL, images use FileReader
+        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            const objectUrl = URL.createObjectURL(file);
+            setPreview(objectUrl);
             setIsUploading(false);
-        };
+        } else {
+            const reader = new FileReader();
 
-        reader.onerror = () => {
-            setError('Failed to read the selected image. Please try again.');
-            setIsUploading(false);
-            setFileImg(null);
-            e.target.value = ''; // Clear the input
-        };
+            reader.onloadend = () => {
+                setPreview(reader.result as string);
+                setIsUploading(false);
+            };
 
-        reader.readAsDataURL(file);
+            reader.onerror = () => {
+                setError('Failed to read the selected file. Please try again.');
+                setIsUploading(false);
+                setFileImg(null);
+                e.target.value = ''; // Clear the input
+            };
+
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleAnalyze = async () => {
         if (!fileImg) {
-            setError('Please select an image first');
+            setError('Please select an image or PDF first');
             return;
         }
 
@@ -132,6 +147,9 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
     };
 
     const clearPreview = () => {
+        if (preview && fileImg?.type === 'application/pdf') {
+            URL.revokeObjectURL(preview);
+        }
         setPreview(null);
         setError(null);
         setIsUploading(false);
@@ -151,7 +169,7 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                 <div className="text-center">
                     <Upload className="mx-auto h-12 w-12 text-blue-400 mb-3" />
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        Upload Invoice Image
+                        Upload Invoice
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
                         AI will automatically extract and fill the form data
@@ -173,7 +191,7 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                         ) : (
                             <>
                                 <Upload className="mr-2 h-5 w-5" />
-                                Choose Image
+                                Choose File
                             </>
                         )}
                     </label>
@@ -181,14 +199,14 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                     <input
                         id="invoice-upload"
                         type="file"
-                        accept="image/*"
+                        accept=".pdf,image/jpeg,image/png,image/webp"
                         onChange={handleImageUpload}
                         disabled={isDisabled}
                         className="hidden"
                     />
 
                     <p className="text-xs text-gray-500 mt-2">
-                        Supports JPG, PNG, WEBP (max 5MB)
+                        Supports JPG, PNG, WEBP, PDF (max 15MB)
                     </p>
                 </div>
 
@@ -203,13 +221,27 @@ export default function ImageInvoiceUpload({ onDataExtracted }: ImageInvoiceUplo
                         >
                             <X className="h-4 w-4" />
                         </button>
-                        <Image
-                            src={preview}
-                            alt="Invoice preview"
-                            width={150}
-                            height={200}
-                            className="max-h-64 mx-auto rounded-lg shadow-lg"
-                        />
+                        {fileImg?.type === 'application/pdf' || fileImg?.name.toLowerCase().endsWith('.pdf') ? (
+                            <div className="w-full flex flex-col items-center">
+                                <div className="w-full max-w-sm bg-white rounded-lg shadow-lg border p-4 flex flex-col items-center">
+                                    <p className="text-sm font-medium text-gray-700 truncate w-full text-center">{fileImg?.name}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{fileImg ? (fileImg.size / 1024 / 1024).toFixed(2) + ' MB' : ''} — PDF</p>
+                                </div>
+                                <embed
+                                    src={preview}
+                                    type="application/pdf"
+                                    className="w-full max-w-sm h-64 mt-3 rounded-lg border shadow-sm"
+                                />
+                            </div>
+                        ) : (
+                            <Image
+                                src={preview}
+                                alt="Invoice preview"
+                                width={150}
+                                height={200}
+                                className="max-h-64 mx-auto rounded-lg shadow-lg"
+                            />
+                        )}
                         <button
                             onClick={handleAnalyze}
                             disabled={analyzing}

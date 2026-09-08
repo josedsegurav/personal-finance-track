@@ -14,6 +14,7 @@ import EditLoanFields from "@/components/loans/EditLoanFields";
 import PaidStatusCell from "@/components/loans/PaidStatusCell";
 import FullScheduleTable from "@/components/loans/FullScheduleTable";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { parseLocalDate } from "@/lib/dateUtils";
 
 export default async function LoanDetailPage({
     params,
@@ -37,15 +38,17 @@ export default async function LoanDetailPage({
     const remainingBalance = lastSchedule?.balance_after ?? principal;
     const progressPct = principal > 0 ? ((principal - remainingBalance) / principal) * 100 : 0;
 
-    const nextPayment = schedule.find((p) => {
-        return new Date(p.due_date) >= new Date() && (p.balance_after ?? 0) > 0;
-    });
-
     const paidScheduledIds = new Set(
         actualPayments
             .filter((a) => a.scheduled_payment_id)
             .map((a) => a.scheduled_payment_id)
     );
+
+    const nextPayment = schedule.find((p) => {
+        const due = parseLocalDate(p.due_date);
+        const todayMidnight = new Date(new Date().toDateString());
+        return due >= todayMidnight && (p.balance_after ?? 0) > 0 && !paidScheduledIds.has(p.id);
+    });
 
     const actualPaymentIdsByScheduledId = new Map<string, string[]>();
     actualPayments.forEach((a) => {
@@ -72,13 +75,40 @@ export default async function LoanDetailPage({
         0
     ) + (loan.extras ?? []).reduce((s: number, e: { amount: number | string | null }) => s + (typeof e.amount === "number" ? e.amount : 0), 0);
 
-    const actualBalances = actualPayments.map((a) => ({
-        date: a.paid_date,
-        balance: principal - actualPayments
-            .filter((ap) => ap.paid_date <= a.paid_date)
-            .reduce((sum, ap) => sum + ap.amount_owed_loan_currency, 0),
-    }));
+    // Build actual payment lookup by date
+    const actualPaymentsByDate = new Map<string, number>();
+    actualPayments.forEach((a) => {
+        const current = actualPaymentsByDate.get(a.paid_date) ?? 0;
+        actualPaymentsByDate.set(a.paid_date, current + a.amount_owed_loan_currency);
+    });
 
+    // Get today's date for cutoff
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    // Calculate actual balances: only show if payment matches scheduled exactly, up to today
+    const actualBalances = schedule
+        .map((scheduledPayment) => {
+            // Stop showing actual balance after today
+            if (scheduledPayment.due_date > today) {
+                return null;
+            }
+
+            const actualPaymentThisDate = actualPaymentsByDate.get(scheduledPayment.due_date) ?? 0;
+
+            // Only show actual balance if payment matches scheduled payment
+            if (actualPaymentThisDate === scheduledPayment.total_payment) {
+                return {
+                    date: scheduledPayment.due_date,
+                    balance: scheduledPayment.balance_after ?? 0,
+                };
+            }
+
+            // Payment differs or missing: don't show actual line for this date
+            return null;
+        })
+        .filter((x): x is { date: string; balance: number } => x !== null);
+    console.log(schedule)
+    console.log(actualBalances)
     const baseCurrency = userSettings?.base_currency ?? "USD";
 
     return (
@@ -196,34 +226,35 @@ export default async function LoanDetailPage({
                         </Link>
                     </div>
 
-                    {/* Next Payment + Chart Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        {nextPayment && (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                                <h2 className="text-sm font-medium text-paynes-gray mb-3">
-                                    Next Payment
-                                </h2>
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-paynes-gray opacity-60">Due Date</span>
-                                        <span className="font-semibold text-paynes-gray">{nextPayment.due_date}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-paynes-gray opacity-60">Amount</span>
-                                        <span className="font-semibold text-paynes-gray">
-                                            {nextPayment.total_payment != null ? formatCurrency(nextPayment.total_payment, loan.currency) : "-"}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-paynes-gray opacity-60">Remaining Balance</span>
-                                        <span className="font-semibold text-paynes-gray">
-                                            {nextPayment.balance_after != null ? formatCurrency(nextPayment.balance_after, loan.currency) : "-"}
-                                        </span>
-                                    </div>
+                    {/* Next Payment */}
+                    {nextPayment && (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                            <h2 className="text-sm font-medium text-paynes-gray mb-3">
+                                Next Payment
+                            </h2>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-paynes-gray opacity-60">Due Date</span>
+                                    <span className="font-semibold text-paynes-gray">{nextPayment.due_date}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-paynes-gray opacity-60">Amount</span>
+                                    <span className="font-semibold text-paynes-gray">
+                                        {nextPayment.total_payment != null ? formatCurrency(nextPayment.total_payment, loan.currency) : "-"}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-paynes-gray opacity-60">Remaining Balance</span>
+                                    <span className="font-semibold text-paynes-gray">
+                                        {nextPayment.balance_after != null ? formatCurrency(nextPayment.balance_after, loan.currency) : "-"}
+                                    </span>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
+                    {/* Balance Over Time - Full Width */}
+                    <div className="mb-6">
                         <BalanceChart
                             schedule={schedule.map((p) => ({
                                 due_date: p.due_date,

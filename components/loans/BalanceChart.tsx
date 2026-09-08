@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
     LineChart,
     Line,
@@ -13,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { LoanScheduledPayment } from "@/app/types";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { parseLocalDate } from "@/lib/dateUtils";
 
 interface BalancePoint {
     label: string;
@@ -57,17 +59,37 @@ function CustomTooltip({
 
 export default function BalanceChart({ schedule, actualBalances, currency }: Props) {
     const hasActuals = actualBalances && actualBalances.length > 0;
+    const [isMobile, setIsMobile] = useState(false);
 
-    const chartData: BalancePoint[] = schedule.map((p, i) => {
-        const actual = hasActuals
-            ? actualBalances.find(
-                  (a) => a.date === p.due_date
-              )?.balance ?? null
-            : null;
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 640);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
+
+    const formatLabel = (dateStr: string) => {
+        try {
+            const d = parseLocalDate(dateStr);
+            return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+        } catch {
+            return dateStr.slice(5);
+        }
+    };
+
+    const chartData: BalancePoint[] = schedule.map((p) => {
+        // Actual balance: plot if data exists for this date (now includes future projections from data layer)
+        let actual: number | null = null;
+        if (hasActuals && actualBalances && actualBalances.length > 0) {
+            // Find the most recent actual balance on or before this scheduled date
+            for (const a of actualBalances) {
+                if (a.date <= p.due_date) {
+                    actual = a.balance; // Update to latest found
+                }
+            }
+        }
         return {
-            label: i === 0 || i === schedule.length - 1 || i % Math.max(1, Math.floor(schedule.length / 12)) === 0
-                ? p.due_date.slice(5)
-                : "",
+            label: formatLabel(p.due_date),
             scheduled: p.balance_after,
             actual,
         };
@@ -81,19 +103,23 @@ export default function BalanceChart({ schedule, actualBalances, currency }: Pro
                 </CardTitle>
             </CardHeader>
             <CardContent className="px-2 pb-4">
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
                     <LineChart
                         data={chartData}
-                        margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+                        margin={{ top: 8, right: 16, left: 0, bottom: 40 }}
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                         <XAxis
                             dataKey="label"
                             tickLine={false}
                             axisLine={false}
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
+                            tick={{ fontSize: isMobile ? 9 : 11, fill: "#6b7280" }}
                             dy={4}
-                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                            interval="preserveStartEnd"
+                            tickMargin={8}
                         />
                         <YAxis
                             tickLine={false}
