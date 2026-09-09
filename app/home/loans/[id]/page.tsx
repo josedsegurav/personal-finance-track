@@ -107,8 +107,7 @@ export default async function LoanDetailPage({
             return null;
         })
         .filter((x): x is { date: string; balance: number } => x !== null);
-    console.log(schedule)
-    console.log(actualBalances)
+
     const baseCurrency = userSettings?.base_currency ?? "USD";
 
     return (
