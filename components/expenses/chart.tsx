@@ -63,13 +63,15 @@ export default function Chart(props: ChartProps) {
 
     const groupedData = expenses.reduce(
       (acc: Record<string, GroupedData>, expense) => {
-        if (!acc[expense.stores.store_name]) {
-          acc[expense.stores.store_name] = {
-            store: expense.stores.store_name,
+        const storesVal: unknown = expense.stores;
+        const storeName = Array.isArray(storesVal) ? (storesVal[0] as { store_name: string })?.store_name : (storesVal as { store_name: string })?.store_name;
+        if (!acc[storeName]) {
+          acc[storeName] = {
+            store: storeName,
             total_expense: 0,
           };
         }
-        acc[expense.stores.store_name].total_expense += expense.total_expense;
+        acc[storeName].total_expense += expense.total_expense;
         return acc;
       },
       {} as Record<string, GroupedData>
@@ -109,7 +111,7 @@ export default function Chart(props: ChartProps) {
         <CardHeader className="items-center pb-4 px-4 lg:px-6">
           <CardTitle className="text-lg lg:text-xl">Expense Breakdown</CardTitle>
           <CardDescription className="text-center text-sm">
-            {months[filters.month]} {filters.year} - {filters.store === "all" ? "All Stores" : expenses[0]?.stores.store_name}
+            {months[filters.month]} {filters.year} - {filters.store === "all" ? "All Stores" : (() => { const v: unknown = expenses[0]?.stores; return Array.isArray(v) ? (v[0] as { store_name: string })?.store_name : (v as { store_name: string })?.store_name; })()}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-4 px-4 lg:px-6">

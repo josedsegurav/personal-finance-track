@@ -6,6 +6,7 @@ import TrendChart from "@/components/dashboard/TrendChart";
 import CategoryDonut from "@/components/dashboard/CategoryDonut";
 import BudgetStrip from "@/components/dashboard/BudgetStrip";
 import SavingsSnapshot from "@/components/dashboard/SavingsSnapshot";
+import LoansWidget from "@/components/dashboard/LoansWidget";
 import DashboardMonthNav from "@/components/dashboard/DashboardMonthNav";
 import RecentTransactionsCompact from "@/components/dashboard/RecentTransactionsCompact";
 import {
@@ -23,6 +24,8 @@ import {
     getBudgetCarryovers,
     getExpectedIncome,
     getUnsettledMonth,
+    getLoans,
+    getUserSettings,
 } from "@/hooks/supabaseQueries";
 import Link from "next/link";
 import { Budget, Category, Expense, Income, SavingsPlan, BudgetCarryover } from "@/app/types";
@@ -61,6 +64,8 @@ export default async function Page({
         carryovers,
         expectedIncome,
         unsettledMonth,
+        loans,
+        userSettings,
     ] = await Promise.all([
         getIncome(supabase),
         getExpense(supabase),
@@ -75,7 +80,62 @@ export default async function Page({
         getBudgetCarryovers(supabase, selectedMonth, selectedYear),
         getExpectedIncome(supabase),
         getUnsettledMonth(supabase, todayMonth, todayYear),
+        getLoans(supabase),
+        getUserSettings(supabase),
     ]);
+
+    // ── Loan data ─────────────────────────────────────────────────────────────
+    let loanWidgetData: Array<{
+        id: string;
+        name: string;
+        remainingBalance: number;
+        nextPayment: { due_date: string; amount: number } | null;
+        status: string;
+    }> = [];
+    let totalDebtBaseCurrency = 0;
+    const baseCurrency = userSettings?.base_currency ?? "USD";
+
+    if (loans.length > 0) {
+        const loanIds = loans.map((l) => l.id);
+        const { data: allPayments } = await supabase
+            .from("loan_scheduled_payments")
+            .select("loan_id, due_date, total_payment, balance_after")
+            .in("loan_id", loanIds)
+            .order("due_date", { ascending: true });
+
+        const paymentsByLoan: Record<string, Array<{ due_date: string; total_payment: number | null; balance_after: number | null }>> = {};
+        (allPayments ?? []).forEach((p: { loan_id: string; due_date: string; total_payment: number | null; balance_after: number | null }) => {
+            if (!paymentsByLoan[p.loan_id]) paymentsByLoan[p.loan_id] = [];
+            paymentsByLoan[p.loan_id]!.push(p);
+        });
+
+        const now = new Date();
+
+        loanWidgetData = loans.map((loan) => {
+            const schedule = paymentsByLoan[loan.id] ?? [];
+            const lastPayment = schedule[schedule.length - 1];
+            const remainingBalance = lastPayment?.balance_after ?? (loan.principal as unknown as number);
+
+            const nextPayment = schedule.find(
+                (p) => new Date(p.due_date) >= now && (p.balance_after ?? 0) > 0
+            );
+
+            return {
+                id: loan.id,
+                name: loan.name,
+                remainingBalance,
+                nextPayment: nextPayment
+                    ? { due_date: nextPayment.due_date, amount: nextPayment.total_payment ?? 0 }
+                    : null,
+                status: loan.status,
+            };
+        });
+
+        totalDebtBaseCurrency = loanWidgetData.reduce(
+            (sum, l) => sum + l.remainingBalance,
+            0
+        );
+    }
 
     if (categories.length === 0 || stores.length === 0) {
         redirect("/home/onboarding");
@@ -463,6 +523,15 @@ const worstCategory = budgetStripData[0];
                 {/* ── Row C: SavingsSnapshot full width ──────────────────────── */}
                 <div className="mb-6">
                     <SavingsSnapshot accounts={savingsSnapshotData} totalCount={savingsAccounts?.length ?? 0} />
+                </div>
+
+                {/* ── Row D: Loans Widget full width ─────────────────────────── */}
+                <div className="mb-6">
+                    <LoansWidget
+                        loans={loanWidgetData}
+                        totalDebtBaseCurrency={totalDebtBaseCurrency}
+                        baseCurrency={baseCurrency}
+                    />
                 </div>
 
                 {/* ── Recent Transactions (full list) ─────────────────────────── */}

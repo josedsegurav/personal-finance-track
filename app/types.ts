@@ -57,7 +57,7 @@ export interface ExpenseDetailed {
     id: number;
     created_at: Date;
     description: string;
-    stores: Store;
+    stores: Store | Store[];
     payment_method: string;
     amount: string;
     expense_date: string;
@@ -67,14 +67,14 @@ export interface ExpenseDetailed {
 export interface ExpenseInPurchase {
     id: number;
     expense_date: Date;
-    stores: Array<Store>;
+    stores: Store | Store[];
 }
 
 export interface PurchaseDetailed {
     id: number;
     created_at: Date;
     item: string;
-    categories: Category;
+    categories: Category | Category[];
     amount: number;
     taxes: number;
     notes: string;
@@ -185,5 +185,98 @@ export interface ExpectedIncome {
     user_id: string;
     amount: number;
     updated_at: string;
+}
+
+export interface UserSettings {
+    id: string;
+    user_id: string;
+    base_currency: string;
+    budgeting_fx_rate: number | null;
+    updated_at: Date;
+}
+
+export interface LoanExtra {
+    label: string;
+    amount: number | string | null;
+}
+
+export interface Loan {
+    id: string;
+    user_id: string;
+    name: string;
+    lender: string | null;
+    principal: number;
+    interest_rate: number | null;
+    term_months: number | null;
+    start_date: string | null;
+    currency: string;
+    status: "active" | "paid_off" | "archived";
+    amortization_system: "french" | "german" | "unknown";
+    extras: LoanExtra[];
+    source_document_note: string | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface LoanScheduledPayment {
+    id: string;
+    loan_id: string;
+    user_id: string;
+    due_date: string;
+    capital: number | null;
+    interest: number | null;
+    total_payment: number | null;
+    balance_after: number | null;
+    extras: LoanExtra[];
+    source: "extracted" | "generated" | "manual";
+    row_flag: string | null;
+    created_at: Date;
+}
+
+export interface LoanActualPayment {
+    id: string;
+    loan_id: string;
+    user_id: string;
+    scheduled_payment_id: string | null;
+    paid_date: string;
+    amount_owed_loan_currency: number;
+    amount_paid_base_currency: number;
+    linked_expense_id: number | null;
+    notes: string | null;
+    created_at: Date;
+}
+
+export interface LoanScenario {
+    id: string;
+    loan_id: string;
+    user_id: string;
+    name: string;
+    extra_monthly: number;
+    lump_sum: number;
+    lump_sum_date: string | null;
+    strategy: "reduce_term" | "reduce_payment";
+    result_payoff_date: string | null;
+    result_months_saved: number | null;
+    result_interest_saved: number | null;
+    created_at: Date;
+}
+
+export interface LoanDocumentUnderstanding {
+    has_schedule_table: boolean;
+    currency: string;
+    date_format: string;
+    number_format: string;
+    column_labels: string[];
+    notes: string;
+}
+
+export interface LoanExtractionResult {
+    loan: Partial<Loan>;
+    schedule: Array<Partial<LoanScheduledPayment>>;
+    flags: {
+        schedule_found: boolean;
+        unmapped_columns: string[];
+        row_issues: Array<{ row_index: number; issue: string }>;
+    };
 }
 

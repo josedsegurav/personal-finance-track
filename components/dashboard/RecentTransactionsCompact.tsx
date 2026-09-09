@@ -33,7 +33,7 @@ export default function RecentTransactionsCompact({ transactions }: Props) {
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-paynes-gray uppercase tracking-wide">Recent Transactions</h3>
                 <Link
-                    href="/home/expenses"
+                    href="/home/transactions"
                     className="text-xs font-medium text-glaucous hover:underline"
                 >
                     View all →

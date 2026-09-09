@@ -29,8 +29,13 @@ interface EditPurchaseProps {
 
 export default function EditExpense(props: EditPurchaseProps) {
   const supabase = createClient();
+  const getCategoryId = () => {
+    const v: unknown = props.purchase.categories;
+    const cat = Array.isArray(v) ? (v[0] as Category) : (v as Category);
+    return cat?.id.toString() ?? "";
+  };
   const [formPurchaseData, setFormPurchaseData] = useState<FormPurchaseData>({
-    category: props.purchase.categories.id.toString(),
+    category: getCategoryId(),
     item: props.purchase.item,
     purchaseAmount: props.purchase.amount.toString(),
     taxes: "0%",
@@ -126,7 +131,7 @@ export default function EditExpense(props: EditPurchaseProps) {
         <select
           id="category"
           name="category"
-          defaultValue={props.purchase.categories.id}
+          defaultValue={(() => { const v: unknown = props.purchase.categories; const c = Array.isArray(v) ? (v[0] as Category) : (v as Category); return c?.id; })()}
           onChange={handleChange}
           className="col-span-3 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
           required

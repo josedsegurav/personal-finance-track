@@ -198,6 +198,86 @@ export async function getExpectedIncome(
     return data ?? null;
 }
 
+export async function getUserSettings(
+    supabase: Awaited<ReturnType<typeof createClient>>
+) {
+    const { data, error } = await supabase
+        .from("user_settings")
+        .select("id, user_id, base_currency, budgeting_fx_rate, updated_at")
+        .maybeSingle();
+
+    if (error) return null;
+    return data ?? null;
+}
+
+export async function getLoans(
+    supabase: Awaited<ReturnType<typeof createClient>>
+) {
+    const { data, error } = await supabase
+        .from("loans")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return data ?? [];
+}
+
+export async function getLoanById(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    loanId: string
+) {
+    const { data, error } = await supabase
+        .from("loans")
+        .select("*")
+        .eq("id", loanId)
+        .maybeSingle();
+
+    if (error) return null;
+    return data ?? null;
+}
+
+export async function getLoanScheduledPayments(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    loanId: string
+) {
+    const { data, error } = await supabase
+        .from("loan_scheduled_payments")
+        .select("*")
+        .eq("loan_id", loanId)
+        .order("due_date", { ascending: true });
+
+    if (error) return [];
+    return data ?? [];
+}
+
+export async function getLoanActualPayments(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    loanId: string
+) {
+    const { data, error } = await supabase
+        .from("loan_actual_payments")
+        .select("*")
+        .eq("loan_id", loanId)
+        .order("paid_date", { ascending: true });
+
+    if (error) return [];
+    return data ?? [];
+}
+
+export async function getLoanScenarios(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    loanId: string
+) {
+    const { data, error } = await supabase
+        .from("loan_scenarios")
+        .select("*")
+        .eq("loan_id", loanId)
+        .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return data ?? [];
+}
+
 export async function getUnsettledMonth(
     supabase: Awaited<ReturnType<typeof createClient>>,
     currentMonth: number,

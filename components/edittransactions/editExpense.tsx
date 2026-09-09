@@ -29,10 +29,15 @@ interface EditExpenseProps {
 
 export default function EditExpense(props: EditExpenseProps) {
   const supabase = createClient();
+  const getStoreId = () => {
+    const v: unknown = props.expense.stores;
+    const store = Array.isArray(v) ? (v[0] as Store) : (v as Store);
+    return store?.id.toString() ?? "";
+  };
   const [formExpenseData, setformExpenseData] = useState<FormExpenseData>({
     description: props.expense.description,
     payment_method: props.expense.payment_method,
-    store: props.expense.stores.id.toString(),
+    store: getStoreId(),
     amount: props.expense.amount.toString(),
     total_expense: props.expense.total_expense.toString(),
     date: props.expense.expense_date,
@@ -152,7 +157,7 @@ export default function EditExpense(props: EditExpenseProps) {
         <select
           id="store"
           name="store"
-          defaultValue={props.expense.stores.id}
+          defaultValue={(() => { const v: unknown = props.expense.stores; const s = Array.isArray(v) ? (v[0] as Store) : (v as Store); return s?.id; })()}
           onChange={handleChange}
           className="col-span-2 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-columbia-blue focus:border-transparent"
           required
